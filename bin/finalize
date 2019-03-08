@@ -17,6 +17,8 @@ echo "Iam in $(pwd)"
 ls -lR
 cd ${BUILDPACK_DIR}
 echo "Iam in $(pwd) == ${BUILDPACK_DIR}"
+tree
+echo "------"
 ls -lR
 echo "------"
 cp ${BUILDPACK_DIR}/../defaults.ini "${GRAFANA_DIR}/conf/"
