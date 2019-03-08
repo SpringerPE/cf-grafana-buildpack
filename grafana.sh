@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export GRAFANA_ROOT=/var/vcap/deps/grafana
+export GRAFANA_ROOT=/home/vcap/deps/grafana
 export APP_ROOT=${HOME}
 export DOMAIN=$(echo ${VCAP_APPLICATION} | jq ".[\"uris\"][0]" --raw-output)
 export PATH=$PATH:${GRAFANA_ROOT}/bin
@@ -34,22 +34,9 @@ launch() {
     return $rvalue
 }
 
-echo "------------- pwd"
-pwd
-echo "------------- ls -lR"
-ls -lR
-echo "------------- ${GRAFANA_ROOT}"
-cd ${GRAFANA_ROOT}
-echo "------------- pwd"
-pwd
-echo "------------- ls -lR"
-ls -lR
-echo "------------- ls -lR /home/vcap/deps/grafana/bin"
-ls -lR /home/vcap/deps/grafana/bin
-echo "----"
-
 
 echo "Launching grafana server..."
+cd ${GRAFANA_ROOT}
 if [ -f "${APP_ROOT}/grafana.ini" ]
 then
     launch grafana-server -config=${APP_ROOT}/grafana.ini
