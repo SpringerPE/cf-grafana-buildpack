@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export GRAFANA_ROOT=${HOME}/deps/grafana
-export APP_ROOT=${HOME}/app
+export GRAFANA_ROOT=/var/vcap/deps/grafana
+export APP_ROOT=${HOME}
 export DOMAIN=$(echo ${VCAP_APPLICATION} | jq ".[\"uris\"][0]" --raw-output)
 export PATH=$PATH:${GRAFANA_ROOT}/bin
 
