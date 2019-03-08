@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# bin/release <build-dir>
+set -e
+
+BUILD_DIR=$(cd "$1/" && pwd)
+
+cat <<EOF
+---
+default_process_types:
+  web: /home/vcap/deps/grafana/grafana.sh
+EOF
+
