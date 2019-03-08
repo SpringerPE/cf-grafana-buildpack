@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
-export GRAFANA_ROOT=/home/vcap/deps/grafana
-export APP_ROOT=${HOME}
 export DOMAIN=$(echo ${VCAP_APPLICATION} | jq ".[\"uris\"][0]" --raw-output)
 export PATH=$PATH:${GRAFANA_ROOT}/bin
 
+export GRAFANA_ROOT=/home/vcap/deps/grafana
+export APP_ROOT=${HOME}
+
+###
+
+randomstring() {
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1
+}
 
 # exec grafana and create the datasources
 launch() {
@@ -34,6 +40,22 @@ launch() {
     return $rvalue
 }
 
+
+echo "Setting environment variables ..."
+if [ -z "${SECRET_KEY}" ]
+then
+    export SECRET_KEY=$(randomstring)
+    echo "######################################################################"
+    echo "WARNING: SECRET_KEY environment variable not defined!"
+    echo "Used for signing some datasource settings like secrets and passwords."
+    echo "Cannot be changed without requiring an update to datasource settings to re-encode them."
+    echo "Please define it in grafana.ini or using an environment variable!"
+    echo "Generated SECRET_KEY=${SECRET_KEY}"
+    echo "######################################################################"
+fi
+export ADMIN_USER=${ADMIN_USER:-admin}
+export ADMIN_PASS=${ADMIN_PASS:-admin}
+export EMAIL=${EMAIL:-grafana@$DOMAIN}
 
 echo "Launching grafana server..."
 cd ${GRAFANA_ROOT}
