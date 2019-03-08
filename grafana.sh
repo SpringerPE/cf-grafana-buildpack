@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 export DOMAIN=$(echo ${VCAP_APPLICATION} | jq ".[\"uris\"][0]" --raw-output)
-export PATH=$PATH:${GRAFANA_ROOT}/bin
 
 export GRAFANA_ROOT=/home/vcap/deps/grafana
 export APP_ROOT=${HOME}
+export PATH=$PATH:${GRAFANA_ROOT}/bin
 
 ###
 
