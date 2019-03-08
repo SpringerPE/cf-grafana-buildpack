@@ -44,7 +44,7 @@ echo "------------- pwd"
 pwd
 echo "------------- ls -lR"
 ls -lR
-echo "------------- ls -lR /home/vcap/deps/grafana"
+echo "------------- ls -lR /home/vcap/deps/grafana/bin"
 ls -lR /home/vcap
 echo "----"
 
