@@ -1,0 +1,9 @@
+---
+applications:
+- name: grafana
+  memory: 1G
+  instances: 1
+  stack: cflinuxfs2
+  routes:
+  - route: grafana.live.cf.private.springer.com
+  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git

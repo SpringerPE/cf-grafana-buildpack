@@ -2,6 +2,13 @@
 
 PoC
 
+# Using it
+
+To use this buildpack, specify the URI of this repository when push to Cloud Foundry.
+```
+$ cf push <APP-NAME> -b https://github.com/SpringerPE/cf-grafana-buildpack.git
+```
+
 # Configuration
 
 http://docs.grafana.org/installation/configuration/
