@@ -40,6 +40,11 @@ echo "------------- ls -lR"
 ls -lR
 echo "------------- ${GRAFANA_ROOT}"
 cd ${GRAFANA_ROOT}
+echo "------------- pwd"
+pwd
+echo "------------- ls -lR"
+ls -lR
+echo "----"
 
 
 echo "Launching grafana server..."
