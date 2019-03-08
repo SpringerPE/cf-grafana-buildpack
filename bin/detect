@@ -4,10 +4,7 @@ set -e
 
 BUILD_DIR=$(cd "$1/" && pwd)
 
-if [ -f "${BUILD_DIR}/grafana.ini" ]
-then
-    echo "Grafana"
-    exit 0
-else
-    exit 1
-fi
+# Acepts all apps!
+echo "Grafana"
+exit 0
+
