@@ -10,11 +10,11 @@ BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
 GRAFANA_DIR="${DEPS_DIR}/grafana"
 
 echo "-----> Symlinking properties and default configuration"
-rm -rf "${GRAFANA_DIR}/provisioning"
-ln -sf ${BUILD_DIR} "${GRAFANA_DIR}/provisioning"
+rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
+ln -sf /home/vcap/app "${GRAFANA_DIR}/conf/provisioning"
 
-echo "-----> Creating start script"
+echo "-----> Creating startup script"
 cp ${BUILDPACK_DIR}/grafana.sh ${GRAFANA_DIR}/grafana.sh
-chmod +x  ${GRAFANA_DIR}/grafana.sh
+chmod +x ${GRAFANA_DIR}/grafana.sh
 
