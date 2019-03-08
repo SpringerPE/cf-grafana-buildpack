@@ -12,11 +12,13 @@ GRAFANA_DIR="${DEPS_DIR}/grafana"
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/provisioning"
 ln -sf ${BUILD_DIR} "${GRAFANA_DIR}/provisioning"
-pwd
+echo "------"
+echo "Iam in $(pwd)"
 ls -lR
 cd ${BUILDPACK_DIR}
-pwd
+echo "Iam in $(pwd) == ${BUILDPACK_DIR}"
 ls -lR
+echo "------"
 cp ${BUILDPACK_DIR}/../defaults.ini "${GRAFANA_DIR}/conf/"
 
 echo "-----> Creating start script"
