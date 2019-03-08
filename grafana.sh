@@ -34,14 +34,19 @@ launch() {
     return $rvalue
 }
 
-
+echo "------------- pwd"
+pwd
+echo "------------- ls -lR"
+ls -lR
+echo "------------- ${GRAFANA_ROOT}"
 cd ${GRAFANA_ROOT}
+
 
 echo "Launching grafana server..."
 if [ -f "${APP_ROOT}/grafana.ini" ]
 then
-    launch ./bin/grafana-server -config=${APP_ROOT}/grafana.ini
+    launch grafana-server -config=${APP_ROOT}/grafana.ini
 else
-    launch ./bin/grafana-server
+    launch grafana-server
 fi
 
