@@ -20,3 +20,6 @@ echo "-----> Installing Grafana"
 mkdir -p ${DEPS_DIR}/grafana
 tar -zxf ${CACHE_DIR}/grafana.tar -C ${DEPS_DIR}/grafana --strip-components 1
 
+echo "-----> Installing cloud sql proxy"
+mkdir -p ${DEPS_DIR}/cloud_sql_proxy
+wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O ${DEPS_DIR}/cloud_sql_proxy/cloud_sql_proxy
