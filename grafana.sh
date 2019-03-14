@@ -69,8 +69,7 @@ export EMAIL=${EMAIL:-grafana@$DOMAIN}
 echo "Launching local sql proxy ..."
 if [ -f "${APP_ROOT}/auth.json" ]
 then
-    launch background cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-2-1552482443106729127=tcp:3306 -credential_f
-ile "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
+    launch background cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-2-1552482443106729127=tcp:3306 -credential_file "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
 fi
 
 
@@ -78,8 +77,7 @@ echo "Launching grafana server..."
 cd ${GRAFANA_ROOT}
 if [ -f "${APP_ROOT}/grafana.ini" ]
 then
-    launch grafana-server -config=${APP_ROOT}/grafana.ini
+    launch foreground grafana-server -config=${APP_ROOT}/grafana.ini
 else
-    launch grafana-server
+    launch foreground grafana-server
 fi
-
