@@ -66,6 +66,11 @@ export ADMIN_PASS=${ADMIN_PASS:-admin}
 export EMAIL=${EMAIL:-grafana@$DOMAIN}
 
 
+# base64?
+
+base64 --help
+
+
 echo "Launching local sql proxy ..."
 if [ -f "${APP_ROOT}/auth.json" ]
 then
