@@ -36,7 +36,7 @@ launch() {
         echo "Error launching '$@'."
         rvalue=1
     else
-        if [[ -z "${background}" ]]
+        if [[ -z "${background}" ]] && [[ "${background}" == "bg" ]]
         then
             wait $pid 2>/dev/null
             rvalue=$?
@@ -69,7 +69,7 @@ export EMAIL=${EMAIL:-grafana@$DOMAIN}
 echo "Launching local sql proxy ..."
 if [ -f "${APP_ROOT}/auth.json" ]
 then
-    launch background cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-2-1552482443106729127=tcp:3306 -credential_file "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
+    launch fg cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-2-1552482443106729127=tcp:3306 -credential_file "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
 fi
 
 
@@ -77,7 +77,7 @@ echo "Launching grafana server..."
 cd ${GRAFANA_ROOT}
 if [ -f "${APP_ROOT}/grafana.ini" ]
 then
-    launch foreground grafana-server -config=${APP_ROOT}/grafana.ini
+    launch bg grafana-server -config=${APP_ROOT}/grafana.ini
 else
-    launch foreground grafana-server
+    launch bg grafana-server
 fi
