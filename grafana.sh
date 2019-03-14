@@ -69,7 +69,7 @@ export EMAIL=${EMAIL:-grafana@$DOMAIN}
 echo "Launching local sql proxy ..."
 if [ -f "${APP_ROOT}/auth.json" ]
 then
-    launch fg cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-2-1552482443106729127=tcp:3306 -credential_file "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
+    launch fg cloud_sql_proxy -instances=sn-paas-sb-gcp:europe-west4:pcf-sb-1-1552482443106534027=tcp:3306 -credential_file "${APP_ROOT}/auth.json" -log_debug_stdout -verbose
 fi
 
 
