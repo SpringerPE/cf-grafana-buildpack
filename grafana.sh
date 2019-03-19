@@ -4,7 +4,7 @@ export GRAFANA_ROOT=/home/vcap/deps/grafana
 export SQLPROXY_ROOT=/home/vcap/deps/cloud_sql_proxy
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 export APP_ROOT=${HOME}
-export AUTH_ROOT="${APP_ROOT}/auth"
+export AUTH_ROOT="/var/vcap/auth"
 
 ###
 
@@ -158,8 +158,9 @@ set_DB_settings() {
         export_DB_params "${db}" >/dev/null
         export_DB_params_secure "${db}" >/dev/null
         export_DB_proxy "${db}"
+        # Set parameters for session
+        export_DB_session
     fi
-    export_DB_session
 }
 
 random_string() {
