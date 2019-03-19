@@ -11,15 +11,16 @@ GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSI
 
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
 GRAFANA_DIR="${DEPS_DIR}/grafana"
+SQLPROXY_DIR="${DEPS_DIR}/cloud_sql_proxy"
 
 [ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_DOWNLOAD_URL=$(cat "${BUILD_DIR}/runtime.txt")
 echo "-----> Downloading Grafana: ${GRAFANA_DOWNLOAD_URL}"
-wget "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana.tar"
+wget -nv "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana.tgz" 2>&1 | sed 's/^/       /'
 
 echo "-----> Installing Grafana"
-mkdir -p ${DEPS_DIR}/grafana
-tar -zxf ${CACHE_DIR}/grafana.tar -C ${DEPS_DIR}/grafana --strip-components 1
+mkdir -p "${GRAFANA_DIR}"
+tar -zxf ${CACHE_DIR}/grafana.tgz -C "${GRAFANA_DIR}" --strip-components 1
 
 echo "-----> Installing cloud sql proxy"
-mkdir -p ${DEPS_DIR}/cloud_sql_proxy
-wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O ${DEPS_DIR}/cloud_sql_proxy/cloud_sql_proxy
+mkdir -p "${SQLPROXY_DIR}"
+wget -nv https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O "${SQLPROXY_DIR}/cloud_sql_proxy" 2>&1 | sed 's/^/       /'
