@@ -4,7 +4,7 @@ export GRAFANA_ROOT=/home/vcap/deps/grafana
 export SQLPROXY_ROOT=/home/vcap/deps/cloud_sql_proxy
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 export APP_ROOT=${HOME}
-export AUTH_ROOT="/var/vcap/auth"
+export AUTH_ROOT="/home/vcap/auth"
 
 ###
 
