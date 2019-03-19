@@ -24,7 +24,7 @@ export DB_CA_CERT=""
 export DB_CLIENT_CERT=""
 export DB_CLIENT_KEY=""
 export DB_CERT_NAME=""
-export DB_TLS=""
+export DB_TLS="skip-verify"
 export DB_PROXY_INSTANCE=""
 
 export SESSION_DB_TYPE="file"
@@ -219,10 +219,10 @@ echo "Initializing settings ..."
 set_DB_settings "${DB_BINDING_NAME}"
 set_seed_secrets
 
-echo "Launching local sql proxy ..."
-if [ -f "${APP_ROOT}/auth.json" ]
+if [ -f "${AUTH_ROOT}/auth.json" ]
 then
-    launch fg cloud_sql_proxy -instances="${DB_PROXY_INSTANCE}" -credential_file "${APP_ROOT}/auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
+    echo "Launching local sql proxy ..."
+    launch bg cloud_sql_proxy -instances="${DB_PROXY_INSTANCE}" -credential_file="${AUTH_ROOT}/auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
 fi
 
 echo "Launching grafana server..."
