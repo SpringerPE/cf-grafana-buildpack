@@ -120,6 +120,7 @@ export_DB_params_secure() {
 export_DB_proxy() {
     local db="${1}"
 
+    local kind=$(get_db_vcap_service_type "${db}")
     if is_service_on_GCP "${db}"
     then
         jq -r '.credentials.PrivateKeyData' <<<"${db}" | base64 -d > "${AUTH_ROOT}/auth.json"
