@@ -193,6 +193,7 @@ launch() {
     ) &
     pid=$!
     sleep 30
+    ps -fea
     if ! ps -p ${pid} >/dev/null 2>&1; then
         echo
         echo "Error launching '$@'."
@@ -221,7 +222,7 @@ set_seed_secrets
 echo "Launching local sql proxy ..."
 if [ -f "${APP_ROOT}/auth.json" ]
 then
-    launch fg cloud_sql_proxy -instances="${DB_PROXY_INSTANCE}" -credential_file "${APP_ROOT}/auth.json" -verbose
+    launch fg cloud_sql_proxy -instances="${DB_PROXY_INSTANCE}" -credential_file "${APP_ROOT}/auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
 fi
 
 echo "Launching grafana server..."
