@@ -127,6 +127,13 @@ export_DB_proxy() {
         DB_PROXY_INSTANCE=$(jq -r '.credentials.ProjectId + ":" + .credentials.region + ":" + .credentials.instance_name' <<<"${db}")
         export DB_PROXY_INSTANCE="${DB_PROXY_INSTANCE}=tcp:${DB_PORT}"
         export DB_CERT_NAME=$(jq -r '.credentials.ProjectId + ":" + .credentials.instance_name' <<<"${db}")
+        if [ "${kind}" == "false" ]
+        then
+            export DB_TLS="true"
+        elif [ "${kind}" == "postgres" ]
+        then
+            export DB_TLS="disable"
+        fi
     fi
 }
 
@@ -194,7 +201,6 @@ launch() {
     ) &
     pid=$!
     sleep 30
-    ps -fea
     if ! ps -p ${pid} >/dev/null 2>&1; then
         echo
         echo "Error launching '$@'."
