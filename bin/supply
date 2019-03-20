@@ -29,14 +29,6 @@ then
     echo "-----> Downloading Grafana from runtime.txt spec: ${GRAFANA_DOWNLOAD_URL}"
     wget -nv "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana.tgz" 2>&1 | sed 's/^/       /'
 else
-    echo "---"
-    ls -l
-    echo "---"
-    ls -l "${BUILDPACK_DIR}"
-    echo "---"
-    ls -l "${ASSETS_PATH}"
-    echo "---"
-
     if [ -f "${ASSETS_PATH}/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz" ]
     then
        echo "-----> Using grafana ${GRAFANA_VERSION} from the builpack"
@@ -54,6 +46,7 @@ fi
 
 echo "-----> Installing Grafana"
 mkdir -p "${GRAFANA_DIR}"
+file -zxf ${CACHE_DIR}/grafana.tgz
 tar -zxf ${CACHE_DIR}/grafana.tgz -C "${GRAFANA_DIR}" --strip-components 1
 
 mkdir -p "${SQLPROXY_DIR}"
