@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ROOT=${HOME}
+ROOT="/home/vcap"
 export AUTH_ROOT="${ROOT}/auth"
 export GRAFANA_ROOT="${ROOT}/deps/grafana"
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
