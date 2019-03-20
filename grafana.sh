@@ -270,7 +270,8 @@ install_plugins() {
 
 run_proxies() {
     local instance dbname
-    for file in ${AUTH_ROOT}/*.proxy do
+    for file in ${AUTH_ROOT}/*.proxy
+    do
         dbname=$(basename "${file}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
         instance=$(head "${file}")
         echo "Launching local sql proxy for instance ${instance} ..."
