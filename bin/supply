@@ -8,10 +8,11 @@ DEPS_IDX="${4}"
 
 GRAFANA_VERSION="${GRAFANA_VERSION:-6.0.2}"
 GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz"
-ASSETS_PATH="assets"
 GRAFANA_DIR="${DEPS_DIR}/grafana"
 SQLPROXY_DIR="${DEPS_DIR}/cloud_sql_proxy"
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
+ASSETS_PATH="${BUILDPACK_DIR}/../assets"
+
 
 if [ "$(printf '%s\n' "6.0.0" "${GRAFANA_VERSION}" | sort -V | head -n1)" == "6.0.0" ]
 then 
@@ -49,6 +50,7 @@ tar -zxf ${CACHE_DIR}/grafana.tgz -C "${GRAFANA_DIR}" --strip-components 1
 
 mkdir -p "${SQLPROXY_DIR}"
 if [ -f "${ASSETS_PATH}/cloud_sql_proxy.linux.amd64" ]
+then
     echo "-----> Installing cloud sql proxy"
     cp "${ASSETS_PATH}/cloud_sql_proxy.linux.amd64" "${SQLPROXY_DIR}/cloud_sql_proxy"
 else
