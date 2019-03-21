@@ -5,12 +5,12 @@ set -e
 BUILD_DIR=$(cd "$1/" && pwd)
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
 
-cp "${BUILDPACK_DIR}/grafana.sh" "${BUILD_DIR}/grafana.sh"
-chmod +x "${BUILD_DIR}/grafana.sh"
+cp "${BUILDPACK_DIR}/grafana.sh" "${BUILD_DIR}/.grafana.sh"
+chmod +x "${BUILD_DIR}/.grafana.sh"
 
 cat <<EOF
 ---
 default_process_types:
-  web: /home/vcap/app/grafana.sh
+  web: /home/vcap/app/.grafana.sh
 EOF
 
