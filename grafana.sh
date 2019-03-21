@@ -201,12 +201,18 @@ set_DB_proxy() {
 set_session_DB() {
     local sessiondb
 
+    echo "1"
     sessiondb=$(get_binding_service "${SESSION_DB_BINDING_NAME}")
+    echo "2"
     [ -z "${sessiondb}" ] && sessiondb=$(get_db_vcap_service "${DB_BINDING_NAME}")
+    echo "3"
     if [ -n "${sessiondb}" ]
     then
+        echo "4"
         export_DB "${sessiondb}" >/dev/null
+        echo "5"
         set_DB_proxy "${sessiondb}"
+        echo "6"
         if [ "${DB_TYPE}" == "mysql" ]
         then
             SESSION_DB_TYPE="mysql"
@@ -218,6 +224,7 @@ set_session_DB() {
         fi
         # TODO TLS
    fi
+   echo "10"
 }
 
 # Find out the main DB
