@@ -290,7 +290,8 @@ run_sql_proxies() {
 
 run_grafana_server() {
     echo "Launching grafana server ..."
-    pushd ${GRAFANA_ROOT}
+    echo "++++++++++++++${GRAFANA_ROOT}++++++++++++"
+    pushd "${GRAFANA_ROOT}"
         if [ -f "${GRAFANA_CFG_INI}" ]
         then
             launch bg grafana-server -config=${GRAFANA_CFG_INI}
