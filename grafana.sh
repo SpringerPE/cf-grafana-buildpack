@@ -263,8 +263,11 @@ install_grafana_plugins() {
     then
         while read -r pluginid pluginversion
         do
-            echo "Installing ${pluginid} ${pluginversion} ..."
-            grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install ${pluginid} ${pluginversion}
+            if [ -n "${pluginid}" ]
+            then
+                echo "Installing ${pluginid} ${pluginversion} ..."
+                grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install ${pluginid} ${pluginversion}
+            fi
         done <<< $(grep -v '^#' "${GRAFANA_CFG_PLUGINS}")
     fi
 }
