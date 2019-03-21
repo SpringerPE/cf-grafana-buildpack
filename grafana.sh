@@ -296,10 +296,8 @@ run_grafana_server() {
     popd
 }
 
-
 run() {
     local pid
-
     run_sql_proxies
     if [ -x "${GRAFANA_POST_START}" ]
     then
