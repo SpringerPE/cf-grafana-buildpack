@@ -15,7 +15,7 @@ SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
 GRAFANA_MIN_VERSION="6.0.0"
 
 
-
+[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
 if [ "$(echo -e "${GRAFANA_MIN_VERSION}\n${GRAFANA_VERSION}" | sort -V | head -n1)" == "${GRAFANA_MIN_VERSION}" ]
 then 
     # Greater than or equal to 6.0.0"
@@ -25,7 +25,6 @@ else
     exit 1
 fi
 
-[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
 GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz"
 if [ -f "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" ]
 then
