@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html
 
 BUILD_DIR="${1}"
 CACHE_DIR="${2}"
@@ -7,16 +8,24 @@ DEPS_DIR="${3}"
 DEPS_IDX="${4}"
 
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
-GRAFANA_DIR="${DEPS_DIR}/grafana"
-SQL_PROXY_DIR="${DEPS_DIR}/cloud_sql_proxy"
+GRAFANA_VERSION="${GRAFANA_VERSION:-6.0.2}"
+CLOUDSQL_PROXY_VERSION="${CLOUDSQL_PROXY_VERSION:-1.13}"
+GRAFANA_DIR="${DEPS_DIR}/${DEPS_IDX}/grafana"
+SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
+[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+
+
+echo "-----> Installing Grafana"
+mkdir -p "${GRAFANA_DIR}"
+tar -zxf "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" -C "${GRAFANA_DIR}" --strip-components 1
+chmod +x "${GRAFANA_DIR}/bin/grafana-*"
+
+echo "-----> Installing Cloudsql Proxy"
+mkdir -p "${SQLPROXY_DIR}"
+cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
+chmod +x "${SQLPROXY_DIR}/cloud_sql_proxy"
 
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
-ln -sf /home/vcap/app "${GRAFANA_DIR}/conf/provisioning"
-
-echo "-----> Creating startup script"
-cp ${BUILDPACK_DIR}/grafana.sh ${GRAFANA_DIR}/grafana.sh
-chmod +x ${GRAFANA_DIR}/grafana.sh
-chmod +x ${SQL_PROXY_DIR}/cloud_sql_proxy
 

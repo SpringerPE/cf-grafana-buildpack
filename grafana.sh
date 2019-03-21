@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 ROOT="/home/vcap"
 export AUTH_ROOT="${ROOT}/auth"
-export GRAFANA_ROOT="${ROOT}/deps/grafana"
+export GRAFANA_ROOT=$(find ${ROOT}/deps -name grafana -type d)
+export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d)
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
-export SQLPROXY_ROOT="${ROOT}/deps/cloud_sql_proxy"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 ### Defined here to avoid override
@@ -109,7 +110,7 @@ service_on_GCP() {
     jq -e '.tags | contains(["gcp"])' <<<"${db}" >/dev/null
 }
 
-reset_DB() {
+reset_env_DB() {
     DB_TYPE="sqlite3"
     DB_USER="root"
     DB_HOST="127.0.0.1"
@@ -233,11 +234,11 @@ set_main_DB() {
 }
 
 # Sets all DB
-set_DBs() {
+set_sql_databases() {
     echo "Initializing DB settings from service instances ..."
-    reset_DB
+    reset_env_DB
     set_session_DB
-    reset_DB
+    reset_env_DB
     set_main_DB
 }
 
@@ -256,7 +257,7 @@ set_seed_secrets() {
     fi
 }
 
-install_plugins() {
+install_grafana_plugins() {
     echo "Initializing plugins from ${GRAFANA_CFG_PLUGINS} ..."
     if [ -f "${GRAFANA_CFG_PLUGINS}" ]
     then
@@ -268,7 +269,7 @@ install_plugins() {
     fi
 }
 
-run_proxies() {
+run_sql_proxies() {
     local instance dbname
     for file in ${AUTH_ROOT}/*.proxy
     do
@@ -279,19 +280,25 @@ run_proxies() {
     done
 }
 
-###
 
-set_DBs
+run_grafana_server() {
+    echo "Launching grafana server ..."
+    pushd ${GRAFANA_ROOT}
+        if [ -f "${GRAFANA_CFG_INI}" ]
+        then
+            launch bg grafana-server -config=${GRAFANA_CFG_INI}
+        else
+            launch bg grafana-server
+        fi
+    popd
+}
+
+
+################################################################################
+
+set_sql_databases
 set_seed_secrets
-install_plugins
-run_proxies
-
-echo "Launching grafana server..."
-cd ${GRAFANA_ROOT}
-if [ -f "${GRAFANA_CFG_INI}" ]
-then
-    launch bg grafana-server -config=${GRAFANA_CFG_INI}
-else
-    launch bg grafana-server
-fi
+install_grafana_plugins
+run_sql_proxies
+run_grafana_server
 

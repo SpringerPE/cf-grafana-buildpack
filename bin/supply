@@ -1,61 +1,54 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html
 
 BUILD_DIR="${1}"
 CACHE_DIR="${2}"
 DEPS_DIR="${3}"
 DEPS_IDX="${4}"
 
-GRAFANA_VERSION="${GRAFANA_VERSION:-6.0.2}"
-GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz"
-GRAFANA_DIR="${DEPS_DIR}/grafana"
-SQLPROXY_DIR="${DEPS_DIR}/cloud_sql_proxy"
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
-ASSETS_PATH="${BUILDPACK_DIR}/assets"
+GRAFANA_VERSION="${GRAFANA_VERSION:-6.0.2}"
+CLOUDSQL_PROXY_VERSION="${CLOUDSQL_PROXY_VERSION:-1.13}"
+GRAFANA_DIR="${DEPS_DIR}/${DEPS_IDX}/grafana"
+SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
+GRAFANA_MIN_VERSION="6.0.0"
 
 
-if [ "$(printf '%s\n' "6.0.0" "${GRAFANA_VERSION}" | sort -V | head -n1)" == "6.0.0" ]
+
+if [ "$(echo -e "${GRAFANA_MIN_VERSION}\n${GRAFANA_VERSION}" | sort -V | head -n1)" == "${GRAFANA_MIN_VERSION}" ]
 then 
     # Greater than or equal to 6.0.0"
     echo "-----> Requesting grafana ${GRAFANA_VERSION}"
 else
-    echo "ERROR, Grafana version ${GRAFANA_VERSION} not supported by this buildpack"
+    echo "ERROR> Grafana version ${GRAFANA_VERSION} not supported by this buildpack"
     exit 1
 fi
 
-if [ -f "${BUILD_DIR}/runtime.txt" ]
+[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz"
+if [ -f "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" ]
 then
-    GRAFANA_DOWNLOAD_URL=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
-    echo "-----> Downloading Grafana from runtime.txt spec: ${GRAFANA_DOWNLOAD_URL}"
-    wget -nv "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana.tgz" 2>&1 | sed 's/^/       /'
+    echo "-----> Using grafana ${GRAFANA_VERSION} from cache"
 else
-    if [ -f "${ASSETS_PATH}/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz" ]
+    echo "-----> Downloading Grafana: ${GRAFANA_DOWNLOAD_URL}"
+    if ! wget -nv "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" 2>&1 | sed 's/^/       /'
     then
-       echo "-----> Using grafana ${GRAFANA_VERSION} from the builpack"
-       cp "${ASSETS_PATH}/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz" "${CACHE_DIR}/grafana.tgz"
-    else
-       echo "-----> Downloading Grafana: ${GRAFANA_DOWNLOAD_URL}"
-       wget -nv "${GRAFANA_DOWNLOAD_URL}" -O "${CACHE_DIR}/grafana.tgz" 2>&1 | sed 's/^/       /'
-       if [ $? -ne 0 ]
-       then
-           echo "ERROR, Grafana version ${GRAFANA_VERSION} not found, URL=${GRAFANA_DOWNLOAD_URL}"
-           exit 1
-       fi
+        echo "ERROR> Grafana version ${GRAFANA_VERSION} not found, URL=${GRAFANA_DOWNLOAD_URL}"
+        exit 1
     fi
 fi
 
-echo "-----> Installing Grafana"
-mkdir -p "${GRAFANA_DIR}"
-file -zxf ${CACHE_DIR}/grafana.tgz
-tar -zxf ${CACHE_DIR}/grafana.tgz -C "${GRAFANA_DIR}" --strip-components 1
-
-mkdir -p "${SQLPROXY_DIR}"
-if [ -f "${ASSETS_PATH}/cloud_sql_proxy.linux.amd64" ]
+CLOUDSQL_PROXY_DOWNLOAD_URL="https://storage.googleapis.com/cloudsql-proxy/v${CLOUDSQL_PROXY_VERSION}/cloud_sql_proxy.linux.amd64"
+if [ -f "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" ]
 then
-    echo "-----> Installing cloud sql proxy"
-    cp "${ASSETS_PATH}/cloud_sql_proxy.linux.amd64" "${SQLPROXY_DIR}/cloud_sql_proxy"
+    echo "-----> Using cloudsql proxy ${CLOUDSQL_PROXY_VERSION} from cache"
 else
-    echo "-----> Downloading cloud sql proxy"
-    wget -nv https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O "${SQLPROXY_DIR}/cloud_sql_proxy" 2>&1 | sed 's/^/       /'
+    echo "-----> Downloading cloudsql proxy: ${CLOUDSQL_PROXY_DOWNLOAD_URL}"
+    if ! wget -nv "${CLOUDSQL_PROXY_DOWNLOAD_URL}" -O "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" 2>&1 | sed 's/^/       /'
+    then
+        echo "ERROR> cloudsql proxy version ${GRAFANA_VERSION} not found, URL=${CLOUDSQL_PROXY_DOWNLOAD_URL}"
+        exit 1
+    fi
 fi
 
