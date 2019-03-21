@@ -11,6 +11,6 @@ chmod +x "${BUILD_DIR}/grafana.sh"
 cat <<EOF
 ---
 default_process_types:
-  web: ${BUILD_DIR}/grafana.sh
+  web: /home/vcap/app/grafana.sh
 EOF
 
