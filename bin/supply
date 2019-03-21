@@ -15,9 +15,12 @@ SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
 GRAFANA_MIN_VERSION="6.0.0"
 
 set +x
+echo 1111
 if [ -f "${BUILD_DIR}/runtime.txt" ]
 then
+    echo 2222
     GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+    echo 33333
     if [ -z "${GRAFANA_VERSION}" ]
     then
         echo "ERROR> runtime.txt found but no version specified!"
