@@ -84,7 +84,7 @@ get_binding_service() {
     local binding_name="${1}"
     local rvalue
     
-    jq -e --arg b "${binding_name}" '.[][] | select(.binding_name == $b)' <<<"${VCAP_SERVICES}"
+    jq --arg b "${binding_name}" '.[][] | select(.binding_name == $b)' <<<"${VCAP_SERVICES}"
 }
 
 get_db_vcap_service() {
@@ -94,7 +94,7 @@ get_db_vcap_service() {
     if [ -z "${binding_name}" ] || [ "${binding_name}" == "null" ]
     then
         # search for a sql service looking at the label
-        jq -e '[.[][] | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first' <<<"${VCAP_SERVICES}"
+        jq '[.[][] | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first' <<<"${VCAP_SERVICES}"
     else
         get_binding_service "${binding_name}"
     fi
@@ -102,7 +102,7 @@ get_db_vcap_service() {
 
 get_db_vcap_service_type() {
     local db="${1}"
-    jq -e -r '.credentials.uri | split(":")[0]' <<<"${db}"
+    jq -r '.credentials.uri | split(":")[0]' <<<"${db}"
 }
 
 service_on_GCP() {
