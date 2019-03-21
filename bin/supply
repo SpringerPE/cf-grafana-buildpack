@@ -19,7 +19,7 @@ echo 1111
 if [ -f "${BUILD_DIR}/runtime.txt" ]
 then
     echo 2222
-    GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+    GRAFANA_VERSION=$((grep -v '^#' "${BUILD_DIR}/runtime.txt" || true) | head -n1)
     echo 33333
     if [ -z "${GRAFANA_VERSION}" ]
     then
