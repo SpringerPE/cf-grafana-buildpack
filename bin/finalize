@@ -18,12 +18,12 @@ SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
 echo "-----> Installing Grafana"
 mkdir -p "${GRAFANA_DIR}"
 tar -zxf "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" -C "${GRAFANA_DIR}" --strip-components 1
-chmod +x "${GRAFANA_DIR}/bin/grafana-*"
+chmod +x ${GRAFANA_DIR}/bin/grafana-*
 
 echo "-----> Installing Cloudsql Proxy"
 mkdir -p "${SQLPROXY_DIR}"
 cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
-chmod +x "${SQLPROXY_DIR}/cloud_sql_proxy"
+chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
 
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
