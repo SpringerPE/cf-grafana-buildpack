@@ -15,7 +15,16 @@ SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
 GRAFANA_MIN_VERSION="6.0.0"
 
 
-[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+if [ -f "${BUILD_DIR}/runtime.txt" ]
+then
+    GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
+    if [ -z "${GRAFANA_VERSION}" ]
+    then
+        echo "ERROR> runtime.txt found but no version specified!"
+        exit 1
+    fi
+fi
+
 if [ "$(echo -e "${GRAFANA_MIN_VERSION}\n${GRAFANA_VERSION}" | sort -V | head -n1)" == "${GRAFANA_MIN_VERSION}" ]
 then 
     # Greater than or equal to 6.0.0"
