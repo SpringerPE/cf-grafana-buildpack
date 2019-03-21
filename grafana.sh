@@ -7,6 +7,7 @@ export GRAFANA_ROOT=$(find ${ROOT}/deps -name grafana -type d -maxdepth 2)
 export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
+export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 ### Defined here to avoid override
@@ -283,7 +284,6 @@ run_sql_proxies() {
     done
 }
 
-
 run_grafana_server() {
     echo "Launching grafana server ..."
     pushd "${GRAFANA_ROOT}" >/dev/null
@@ -297,11 +297,29 @@ run_grafana_server() {
 }
 
 
+run() {
+    local pid
+
+    run_sql_proxies
+    if [ -x "${GRAFANA_POST_START}" ]
+    then
+        ( run_grafana_server ) &
+        pid=$!
+        sleep 10
+        echo "Running post-start script ..."
+        ( 
+            cd $(dirname "${GRAFANA_POST_START}")
+            ${GRAFANA_POST_START}
+        )
+        wait ${pid}
+    else
+        run_grafana_server
+    fi
+}
+
 ################################################################################
 
 set_sql_databases
 set_seed_secrets
 install_grafana_plugins
-run_sql_proxies
-run_grafana_server
-
+run
