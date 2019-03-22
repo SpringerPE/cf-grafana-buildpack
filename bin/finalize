@@ -28,7 +28,7 @@ chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
-
+mkdir -p "$BUILD_DIR/.profile.d"
 cat <<EOF > "$BUILD_DIR/.profile.d/0010_grafana.sh"
 export GRAFANA_VERSION=${GRAFANA_VERSION}
 export CLOUDSQL_PROXY_VERSION=${CLOUDSQL_PROXY_VERSION}
