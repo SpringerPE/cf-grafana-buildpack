@@ -28,4 +28,18 @@ chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
+cat <<EOF > "$BUILD_DIR/.profile.d/0010_grafana.sh"
+export GRAFANA_VERSION=$GRAFANA_VERSION
+export CLOUDSQL_PROXY_VERSION=$CLOUDSQL_PROXY_VERSION
 
+export GRAFANA_ROOT="${DEPS_DIR}/${DEPS_IDX}/grafana"
+export SQLPROXY_ROOT="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
+
+# Avoid overriding by end user vars
+ROOT="/home/vcap"
+export GF_PATHS_PLUGINS="${ROOT}/app/plugins"
+export GF_PATHS_PROVISIONING="${ROOT}/app"
+export GF_PATHS_LOGS="${ROOT}/logs"
+export GF_PATHS_DATA="${ROOT}/tmp"
+export GF_ENTERPRISE_LICENSE_PATH="${ROOT}/app/license"
+EOF
