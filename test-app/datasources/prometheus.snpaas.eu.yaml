@@ -1,0 +1,20 @@
+# config file version
+apiVersion: 1
+
+# list of datasources that should be deleted from the database
+deleteDatasources:
+
+# list of datasources to insert/update depending
+# what's available in the database
+datasources:
+- name: Prometheus
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: "https://prometheus.example.com"
+  basicAuth: true
+  basicAuthUser: hola
+  basicAuthPassword: "adfasfadfafas"
+  withCredentials: false
+  isDefault: true
+  editable: false

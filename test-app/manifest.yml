@@ -1,15 +1,14 @@
 ---
 applications:
 - name: grafana
-  memory: 1G
+  memory: 512M
   instances: 1
-  disk_quota: 1024M
   stack: cflinuxfs3
   routes:
-  - route: grafana.live.cf.private.springer.com
+  - route: grafana.app
   buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
-    SECRET_KEY: yUeEBtX7eTmh2ixzz0oHsNyyxYmebSat
+    SECRET_KEY: balbllablalbala
 
