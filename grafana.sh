@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+env
+
+
+
 ROOT="/home/vcap"
 export AUTH_ROOT="${ROOT}/auth"
 #export GRAFANA_ROOT=$(find ${ROOT}/deps -name grafana -type d -maxdepth 2)
