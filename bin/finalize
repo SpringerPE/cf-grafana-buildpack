@@ -34,7 +34,7 @@ export GRAFANA_VERSION=${GRAFANA_VERSION}
 export CLOUDSQL_PROXY_VERSION=${CLOUDSQL_PROXY_VERSION}
 
 export GRAFANA_ROOT="/home/vcap/deps/${DEPS_IDX}/grafana"
-export SQLPROXY_ROOT="home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
+export SQLPROXY_ROOT="/home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
 
 # Avoid overriding these vars by end user vars
 export GF_PATHS_PLUGINS="/home/vcap/app/plugins"

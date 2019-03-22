@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-
-
-
-
+# See bin/finalize to check predefined vars
 ROOT="/home/vcap"
 export AUTH_ROOT="${ROOT}/auth"
 #export GRAFANA_ROOT=$(find ${ROOT}/deps -name grafana -type d -maxdepth 2)
@@ -15,18 +12,6 @@ export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
-
-env
-ls -lR ${SQLPROXY_ROOT}
-
-
-### Defined here to avoid override
-
-# export GF_PATHS_PLUGINS="${ROOT}/app/plugins"
-# export GF_PATHS_PROVISIONING="${ROOT}/app"
-# export GF_PATHS_LOGS="${ROOT}/logs"
-# export GF_PATHS_DATA="${ROOT}/tmp"
-# export GF_ENTERPRISE_LICENSE_PATH="${ROOT}/app/license"
 
 ### Bindings
 
