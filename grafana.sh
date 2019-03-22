@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-env
+
 
 
 
@@ -15,6 +15,10 @@ export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
+
+env
+ls -lR ${SQLPROXY_ROOT}
+
 
 ### Defined here to avoid override
 
