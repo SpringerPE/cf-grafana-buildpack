@@ -271,9 +271,9 @@ install_grafana_plugins() {
 
 run_sql_proxies() {
     local instance dbname
-    for file in ${AUTH_ROOT}/*.proxy
+    for filename in $(find ${AUTH_ROOT} -name '*.proxy')
     do
-        dbname=$(basename "${file}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
+        dbname=$(basename "${filename}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
         instance=$(head "${file}")
         echo "Launching local sql proxy for instance ${instance} ..."
         launch bg cloud_sql_proxy -instances="${instance}" -credential_file="${AUTH_ROOT}/${dbname}-auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
