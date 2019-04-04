@@ -91,7 +91,7 @@ get_db_vcap_service() {
     if [ -z "${binding_name}" ] || [ "${binding_name}" == "null" ]
     then
         # search for a sql service looking at the label
-        jq '[.[][] | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first' <<<"${VCAP_SERVICES}"
+        jq '[.[][] | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
     else
         get_binding_service "${binding_name}"
     fi
