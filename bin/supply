@@ -8,7 +8,7 @@ DEPS_DIR="${3}"
 DEPS_IDX="${4}"
 
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
-source ${BUILDPACK_DIR}/bin/vars.sh
+source ${BUILDPACK_DIR}/parameters.sh
 
 if [ -f "${BUILD_DIR}/runtime.txt" ]
 then
