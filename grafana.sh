@@ -9,6 +9,7 @@ export AUTH_ROOT="${ROOT}/auth"
 export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
+export APP_ROOT="${ROOT}/app"
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
@@ -16,6 +17,7 @@ export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 ### Bindings
 
+export DATASOURCE_BINDING_NAME=${DATASOURCE_BINDING_NAME:-datasource}
 export DB_BINDING_NAME=${DB_BINDING_NAME:-}
 export MAIN_DB_BINDING_NAME=${MAIN_DB_BINDING_NAME:-main}
 export SESSION_DB_BINDING_NAME=${SESSION_DB_BINDING_NAME:-session}
@@ -79,15 +81,12 @@ random_string() {
 
 get_binding_service() {
     local binding_name="${1}"
-    local rvalue
-    
     jq --arg b "${binding_name}" '.[][] | select(.binding_name == $b)' <<<"${VCAP_SERVICES}"
 }
 
 get_db_vcap_service() {
     local binding_name="${1}"
-    local rvalue
-    
+
     if [ -z "${binding_name}" ] || [ "${binding_name}" == "null" ]
     then
         # search for a sql service looking at the label
@@ -100,6 +99,11 @@ get_db_vcap_service() {
 get_db_vcap_service_type() {
     local db="${1}"
     jq -r '.credentials.uri | split(":")[0]' <<<"${db}"
+}
+
+get_prometheus_vcap_service() {
+    # search for a sql service looking at the label
+    jq '[.[][] | select(.credentials.prometheus) ] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
 }
 
 service_on_GCP() {
@@ -239,6 +243,52 @@ set_sql_databases() {
     set_main_DB
 }
 
+set_vcap_datasource_prometheus() {
+    local datasource="${1}"
+
+    local label=$(jq -r '.label' <<<"${datasource}")
+    local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
+    local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
+    local url=$(jq -r '.credentials.prometheus.url' <<<"${datasource}")
+    local auth="true"
+
+    [ -z "${user}" ] && auth="false"
+    mkdir -p "${APP_ROOT}/datasources"
+
+    cat <<EOF > "${APP_ROOT}/datasources/00_${label}.yml"
+apiVersion: 1
+
+# list of datasources that should be deleted from the database
+deleteDatasources:
+
+# list of datasources to insert/update depending
+# what's available in the database
+datasources:
+- name: ${label}
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: "${url}"
+  basicAuth: ${auth}
+  basicAuthUser: ${user}
+  basicAuthPassword: ${pass}
+  withCredentials: false
+  isDefault: true
+  editable: false
+EOF
+}
+
+set_datasources() {
+    local datasource
+
+    datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
+    [ -z "${datasource}" ] && datasource=$(get_prometheus_vcap_service)
+    if [ -n "${datasource}" ]
+    then
+        set_vcap_datasource_prometheus "${datasource}"
+    fi
+}
+
 set_seed_secrets() {
     if [[ -z "${SECRET_KEY}" ]]
     then
@@ -315,5 +365,7 @@ run() {
 
 set_sql_databases
 set_seed_secrets
+set_datasources
 install_grafana_plugins
 run
+
