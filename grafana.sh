@@ -327,7 +327,7 @@ run_sql_proxies() {
     for filename in $(find ${AUTH_ROOT} -name '*.proxy')
     do
         dbname=$(basename "${filename}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
-        instance=$(head "${file}")
+        instance=$(head "${filename}")
         echo "Launching local sql proxy for instance ${instance} ..."
         launch bg cloud_sql_proxy -instances="${instance}" -credential_file="${AUTH_ROOT}/${dbname}-auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
     done
