@@ -194,9 +194,6 @@ set_DB_proxy() {
         echo "${proxy}=tcp:${DB_PORT}" > "${AUTH_ROOT}/${DB_NAME}.proxy"
         [ "${DB_TYPE}" == "mysql" ] && DB_TLS="false"
         [ "${DB_TYPE}" == "postgres" ] && DB_TLS="disable"
-        DB_CA_CERT=""
-        DB_CLIENT_CERT=""
-        DB_CLIENT_KEY=""
         DB_HOST="127.0.0.1"
     fi
 }
@@ -218,9 +215,8 @@ set_session_DB() {
         elif [ "${DB_TYPE}" == "postgres" ]
         then
             SESSION_DB_TYPE="postgres"
-            SESSION_DB_CONFIG="user=${DB_USER} password=${DB_PASS} host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME}"
+            SESSION_DB_CONFIG="user=${DB_USER} password=${DB_PASS} host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} sslmode=${DB_TLS}"
         fi
-        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>$SESSION_DB_CONFIG"
         # TODO TLS
    fi
 }
@@ -245,9 +241,6 @@ set_sql_databases() {
     set_session_DB
     reset_env_DB
     set_main_DB
-    echo ------------------------------------
-    env
-    echo ------------------------------------
 }
 
 set_vcap_datasource_prometheus() {
