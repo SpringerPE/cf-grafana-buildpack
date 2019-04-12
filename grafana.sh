@@ -241,6 +241,9 @@ set_sql_databases() {
     set_session_DB
     reset_env_DB
     set_main_DB
+    echo ------------------------------------
+    env
+    echo ------------------------------------
 }
 
 set_vcap_datasource_prometheus() {
