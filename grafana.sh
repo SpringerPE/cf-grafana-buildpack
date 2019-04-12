@@ -47,7 +47,7 @@ export SESSION_DB_CONFIG="sessions"
 
 # exec process in bg or fg
 launch() {
-    local backgro   und="${1}"
+    local background="${1}"
     shift
     (
         echo "Launching pid=$$: '$@'"
