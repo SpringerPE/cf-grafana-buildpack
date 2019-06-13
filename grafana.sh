@@ -19,11 +19,10 @@ export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 export DATASOURCE_BINDING_NAME=${DATASOURCE_BINDING_NAME:-datasource}
 export DB_BINDING_NAME=${DB_BINDING_NAME:-}
-export MAIN_DB_BINDING_NAME=${MAIN_DB_BINDING_NAME:-main}
-export SESSION_DB_BINDING_NAME=${SESSION_DB_BINDING_NAME:-session}
 
 # Exported variables used in default.ini config file
 export DOMAIN=${DOMAIN:-$(jq -r '.uris[0]' <<<"${VCAP_APPLICATION}")}
+export URL=${URL:-http://$DOMAIN/}
 export ADMIN_USER=${ADMIN_USER:-admin}
 export ADMIN_PASS=${ADMIN_PASS:-admin}
 export EMAIL=${EMAIL:-grafana@$DOMAIN}
@@ -336,4 +335,3 @@ set_seed_secrets
 set_datasources
 install_grafana_plugins
 run
-

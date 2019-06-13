@@ -165,6 +165,39 @@ and change all Grafana connection settings to point to localhost. The SQL proxy 
 to the DB server using the TLS settings and `PrivateData` auth.
 
 
+# Using Oauth
+
+For example, to define Oatuh auth with Google, just create a file `grafana.ini` like this:
+```
+[auth.google]
+enabled = true
+client_id = "${CLIENT_ID}"
+client_secret = "${CLIENT_SECRET}"
+scopes = https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email
+auth_url = https://accounts.google.com/o/oauth2/auth
+token_url = https://accounts.google.com/o/oauth2/token
+allowed_domains = companydomain1.com companydomain2.com
+allow_sign_up = true
+```
+
+In the CF manifest, you can define the variables needed:
+```
+---
+applications:
+- name: mission-control
+  memory: 512M
+  instances: 1
+  stack: cflinuxfs3
+  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
+  env:
+    CLIENT_ID:  'blabla'
+    CLIENT_SECRET: 'blabla'
+    URL: https://mygrafana.companydomain.com
+```
+
+Do not forget to define `$URL` with the https protocol!.
+
+
 # Development
 
 Implemented using bash scripts to make it easy to understand and change.
