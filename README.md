@@ -98,8 +98,7 @@ Apart of the Grafana environment variables, you can define these ones:
 * **DOMAIN**: uri of the application, defauls to the first route in CF.
 * **EMAIL**: when a smtp is configured this is the `from` field, defaults to `grafana@$DOMAIN`.
 * **DB_BINDING_NAME**: name of the binding with a service instance to use as SQL database. By default is empty, so the builpack will search for bindings providing a DB connection string in their `credentials.uri` field. If it is defined it will skip automatic search and focus only on the provided one.
-* **MAIN_DB_BINDING_NAME**: name of the binding for the SQL service instance to use as main DB: users, dashboards, datasources, ... will be saved there. It is used only as fallback if `DB_BINDING_NAME` is not found/defined, by default its value is `main`.
-* **SESSION_DB_BINDING_NAME**: name of the binding for the SQL service instance to use for saving online web sessions. For now this builpack only supports SQL backends, but Grafana also supports other backends as redis or memcached. Used only as fallback if `DB_BINDING_NAME` is not found/defined, by default its value is `session`.
+* **URL**: URL of the app, defaults to `http://$DOMAIN`. If using https you will need to redefine this variable (specially for Oauth integrations!).
 
 For production use, define a proper `ADMIN_PASS` and `SECRET_KEY`. The rest of variables should
 be good with their defautls.

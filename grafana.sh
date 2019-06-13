@@ -39,8 +39,6 @@ export DB_CLIENT_CERT=""
 export DB_CLIENT_KEY=""
 export DB_CERT_NAME=""
 export DB_TLS=""
-export SESSION_DB_TYPE="file"
-export SESSION_DB_CONFIG="sessions"
 
 
 ###
@@ -111,7 +109,7 @@ service_on_GCP() {
     jq -e '.tags | contains(["gcp"])' <<<"${db}" >/dev/null
 }
 
-reset_env_DB() {
+env_DB() {
     DB_TYPE="sqlite3"
     DB_USER="root"
     DB_HOST="127.0.0.1"
@@ -125,7 +123,7 @@ reset_env_DB() {
     DB_TLS=""
 }
 
-export_DB() {
+set_DB() {
     local db="${1}"
     local uri
 
@@ -198,49 +196,19 @@ set_DB_proxy() {
     fi
 }
 
-# Find out the SB database for sessions
-set_session_DB() {
-    local sessiondb
-
-    sessiondb=$(get_binding_service "${SESSION_DB_BINDING_NAME}")
-    [ -z "${sessiondb}" ] && sessiondb=$(get_db_vcap_service "${DB_BINDING_NAME}")
-    if [ -n "${sessiondb}" ]
-    then
-        export_DB "${sessiondb}" >/dev/null
-        set_DB_proxy "${sessiondb}"
-        if [ "${DB_TYPE}" == "mysql" ]
-        then
-            SESSION_DB_TYPE="mysql"
-            SESSION_DB_CONFIG="${DB_USER}:${DB_PASS}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}"
-        elif [ "${DB_TYPE}" == "postgres" ]
-        then
-            SESSION_DB_TYPE="postgres"
-            SESSION_DB_CONFIG="user=${DB_USER} password=${DB_PASS} host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} sslmode=${DB_TLS}"
-        fi
-        # TODO TLS
-   fi
-}
-
-# Find out the main DB
-set_main_DB() {
-    local db
-
-    db=$(get_binding_service "${MAIN_DB_BINDING_NAME}")
-    [ -z "${db}" ] && db=$(get_db_vcap_service "${DB_BINDING_NAME}")
-    if [ -n "${db}" ]
-    then
-        export_DB "${db}" >/dev/null
-        set_DB_proxy "${db}"
-    fi
-}
-
 # Sets all DB
 set_sql_databases() {
+    local db
+
     echo "Initializing DB settings from service instances ..."
-    reset_env_DB
-    set_session_DB
-    reset_env_DB
-    set_main_DB
+    env_DB
+
+    db=$(get_db_vcap_service "${DB_BINDING_NAME}")
+    if [ -n "${db}" ]
+    then
+        set_DB "${db}" >/dev/null
+        set_DB_proxy "${db}"
+    fi
 }
 
 set_vcap_datasource_prometheus() {
