@@ -1,7 +1,7 @@
 # Variables
 
 # default versions
-GRAFANA_VERSION="${GRAFANA_VERSION:-6.3.3}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-6.3.5}"
 CLOUDSQL_PROXY_VERSION="${CLOUDSQL_PROXY_VERSION:-1.13}"
 
 # dependencies paths
