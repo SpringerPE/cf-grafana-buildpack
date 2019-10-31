@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
+[ -z "$DEBUG" ] || set -x
 set -euo pipefail
-#set -x
 
 # See bin/finalize to check predefined vars
 ROOT="/home/vcap"
