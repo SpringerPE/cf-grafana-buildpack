@@ -330,7 +330,6 @@ set_homedashboard() {
         -u "${ADMIN_USER}:${ADMIN_PASS}" \
         "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
     )
-    echo "DASHBOARD: $dashboard_httpcode"
     if [[ "${dashboard_httpcode[1]}" == "200" ]]
     then
         dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
