@@ -361,6 +361,7 @@ run_grafana_server &
 # Set home dashboard only on the first instance
 if [[ "${CF_INSTANCE_INDEX:-0}" == "0" ]]
 then
+    echo "INDEX: $CF_INSTANCE_INDEX"
     sleep 20
     set_homedashboard
 fi
