@@ -8,7 +8,6 @@ DEPS_DIR="${3}"
 DEPS_IDX="${4}"
 
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
-source ${BUILDPACK_DIR}/parameters.sh
 
 if [ -f "${BUILD_DIR}/runtime.txt" ]
 then
@@ -19,6 +18,7 @@ then
         exit 1
     fi
 fi
+source ${BUILDPACK_DIR}/parameters.sh
 
 if [ "$(echo -e "${GRAFANA_MIN_VERSION}\n${GRAFANA_VERSION}" | sort -V | head -n1)" == "${GRAFANA_MIN_VERSION}" ]
 then 
@@ -29,7 +29,6 @@ else
     exit 1
 fi
 
-GRAFANA_DOWNLOAD_URL="https://dl.grafana.com/oss/release/grafana-${GRAFANA_VERSION}.linux-amd64.tar.gz"
 if [ -f "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" ]
 then
     echo "-----> Using grafana ${GRAFANA_VERSION} from cache"
@@ -42,7 +41,6 @@ else
     fi
 fi
 
-CLOUDSQL_PROXY_DOWNLOAD_URL="https://storage.googleapis.com/cloudsql-proxy/v${CLOUDSQL_PROXY_VERSION}/cloud_sql_proxy.linux.amd64"
 if [ -f "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" ]
 then
     echo "-----> Using cloudsql proxy ${CLOUDSQL_PROXY_VERSION} from cache"
@@ -54,4 +52,33 @@ else
         exit 1
     fi
 fi
+
+echo "-----> Installing Grafana"
+mkdir -p "${GRAFANA_DIR}"
+tar -zxf "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" -C "${GRAFANA_DIR}" --strip-components 1
+chmod +x ${GRAFANA_DIR}/bin/grafana-*
+
+echo "-----> Installing Cloudsql Proxy"
+mkdir -p "${SQLPROXY_DIR}"
+cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
+chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
+
+echo "-----> Symlinking properties and default configuration"
+rm -rf "${GRAFANA_DIR}/conf/provisioning"
+cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
+mkdir -p "$BUILD_DIR/.profile.d"
+cat <<EOF > "$BUILD_DIR/.profile.d/0010_grafana.sh"
+export GRAFANA_VERSION=${GRAFANA_VERSION}
+export CLOUDSQL_PROXY_VERSION=${CLOUDSQL_PROXY_VERSION}
+
+export GRAFANA_ROOT="/home/vcap/deps/${DEPS_IDX}/grafana"
+export SQLPROXY_ROOT="/home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
+
+# Avoid overriding these vars by end user vars
+export GF_PATHS_PLUGINS="/home/vcap/app/plugins"
+export GF_PATHS_PROVISIONING="/home/vcap/app"
+export GF_PATHS_LOGS="/home/vcap/logs"
+export GF_PATHS_DATA="/home/vcap/tmp"
+export GF_ENTERPRISE_LICENSE_PATH="/home/vcap/app/license"
+EOF
 

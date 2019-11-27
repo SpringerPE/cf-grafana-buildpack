@@ -8,36 +8,6 @@ DEPS_DIR="${3}"
 DEPS_IDX="${4}"
 
 BUILDPACK_DIR=$(dirname $(readlink -f ${BASH_SOURCE%/*}))
-source ${BUILDPACK_DIR}/parameters.sh
 
-[ -f "${BUILD_DIR}/runtime.txt" ] && GRAFANA_VERSION=$(grep -v '^#' "${BUILD_DIR}/runtime.txt" | head -n1)
-
-
-echo "-----> Installing Grafana"
-mkdir -p "${GRAFANA_DIR}"
-tar -zxf "${CACHE_DIR}/grafana-${GRAFANA_VERSION}.tar.gz" -C "${GRAFANA_DIR}" --strip-components 1
-chmod +x ${GRAFANA_DIR}/bin/grafana-*
-
-echo "-----> Installing Cloudsql Proxy"
-mkdir -p "${SQLPROXY_DIR}"
-cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
-chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
-
-echo "-----> Symlinking properties and default configuration"
-rm -rf "${GRAFANA_DIR}/conf/provisioning"
-cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
-mkdir -p "$BUILD_DIR/.profile.d"
-cat <<EOF > "$BUILD_DIR/.profile.d/0010_grafana.sh"
-export GRAFANA_VERSION=${GRAFANA_VERSION}
-export CLOUDSQL_PROXY_VERSION=${CLOUDSQL_PROXY_VERSION}
-
-export GRAFANA_ROOT="/home/vcap/deps/${DEPS_IDX}/grafana"
-export SQLPROXY_ROOT="/home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
-
-# Avoid overriding these vars by end user vars
-export GF_PATHS_PLUGINS="/home/vcap/app/plugins"
-export GF_PATHS_PROVISIONING="/home/vcap/app"
-export GF_PATHS_LOGS="/home/vcap/logs"
-export GF_PATHS_DATA="/home/vcap/tmp"
-export GF_ENTERPRISE_LICENSE_PATH="/home/vcap/app/license"
-EOF
+# All done in supply in order to be compatible with multi-buildpack
+exit 0
