@@ -333,8 +333,8 @@ set_homedashboard() {
     if [[ "${dashboard_httpcode[1]}" == "200" ]]
     then
         dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
-        echo "Defining default home dashboard for org ${HOME_ORG_ID}: "$(
-        curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        echo "Defining default home dashboard for org ${HOME_ORG_ID}: $dashboard_id "$(
+        curl -v -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
                  -H 'Content-Type: application/json;charset=UTF-8' \
                  -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
                  --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
