@@ -1,12 +1,11 @@
 ---
 applications:
-- name: grafana
+- name: grafana-dev
   memory: 512M
   instances: 1
   stack: cflinuxfs3
-  routes:
-  - route: grafana.app
-  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
+  random-route: true
+  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git#dev
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
