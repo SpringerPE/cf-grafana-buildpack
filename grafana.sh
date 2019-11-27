@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
+[ -z "$DEBUG" ] || set -x
 set -euo pipefail
-#set -x
 
 # See bin/finalize to check predefined vars
 ROOT="/home/vcap"
@@ -73,7 +73,9 @@ launch() {
 }
 
 random_string() {
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1
+    (
+        cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w ${1:-32} | head -n 1 || true
+    )
 }
 
 get_binding_service() {

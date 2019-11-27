@@ -20,6 +20,9 @@ sessions are stored there.
 This buildpack is focused on CloudSQL offered by Google Service Broker. It "should" support
 other service broker instances, but we have not checked it (PR are welcome!)
 
+**In order to test new versions of the buildpack, please use `dev` branch** and
+merge with master only when you are sure it works, otherwise it would cause
+a lot of pain to other users of this buildpack.
 
 ## Using it
 
@@ -200,6 +203,10 @@ Do not forget to define `$URL` with the https protocol!.
 
 # Development
 
+**In order to test new versions of the buildpack, please use `dev` branch** and
+merge with master only when you are sure it works, otherwise it would cause
+a lot of pain to other users of this buildpack.
+
 Implemented using bash scripts to make it easy to understand and change.
 
 https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html
@@ -207,7 +214,6 @@ https://docs.cloudfoundry.org/buildpacks/understand-buildpacks.html
 The builpack uses the `deps` and `cache` folders according the implementation purposes,
 so, the first time the buildpack is used it will download all resources, next times 
 it will use the cached resources.
-
 
 # Author
 
