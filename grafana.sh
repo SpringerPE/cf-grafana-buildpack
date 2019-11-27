@@ -298,6 +298,7 @@ run_sql_proxies() {
     local instance
     local dbname
 
+    [[ -d ${AUTH_ROOT} ]] || return 0
     for filename in $(find ${AUTH_ROOT} -name '*.proxy')
     do
         dbname=$(basename "${filename}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
