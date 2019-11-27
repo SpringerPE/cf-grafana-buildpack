@@ -355,11 +355,9 @@ set_seed_secrets
 set_datasources
 
 # Run
-(
-    install_grafana_plugins
-    run_sql_proxies
-    run_grafana_server
-) &
+install_grafana_plugins
+run_sql_proxies
+run_grafana_server &
 # Set home dashboard only on the first instance
 [[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && set_homedashboard
 wait
