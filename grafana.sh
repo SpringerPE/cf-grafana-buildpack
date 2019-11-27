@@ -358,8 +358,11 @@ set_datasources
 install_grafana_plugins
 run_sql_proxies
 run_grafana_server &
-echo HOLA
 # Set home dashboard only on the first instance
-[[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && set_homedashboard
+if [[ "${CF_INSTANCE_INDEX:-0}" == "0" ]]
+then
+    sleep 20
+    set_homedashboard
+fi
 wait
 
