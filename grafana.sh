@@ -16,23 +16,27 @@ export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 ### Bindings
-
 export DATASOURCE_BINDING_NAME=${DATASOURCE_BINDING_NAME:-datasource}
 export DB_BINDING_NAME=${DB_BINDING_NAME:-}
 
 # Exported variables used in default.ini config file
 export DOMAIN=${DOMAIN:-$(jq -r '.uris[0]' <<<"${VCAP_APPLICATION}")}
 export URL=${URL:-http://$DOMAIN/}
+export HOME_DASHBOARD_UID=${HOME_DASHBOARD_UID:-home}
+export HOME_ORG_ID=${HOME_ORG_ID:-1}
 export ADMIN_USER=${ADMIN_USER:-admin}
 export ADMIN_PASS=${ADMIN_PASS:-admin}
 export EMAIL=${EMAIL:-grafana@$DOMAIN}
+
+# Variables exported, they are automatically filled from the 
+# service broker instances.
 # See reset_DB for default values!
-export DB_TYPE=""
-export DB_USER=""
+export DB_TYPE="sqlite3"
+export DB_USER="root"
 export DB_HOST=""
 export DB_PASS=""
 export DB_PORT=""
-export DB_NAME=""
+export DB_NAME="grafana"
 export DB_CA_CERT=""
 export DB_CLIENT_CERT=""
 export DB_CLIENT_KEY=""
@@ -42,10 +46,8 @@ export DB_TLS=""
 
 ###
 
-# exec process in bg or fg
+# exec process in bg
 launch() {
-    local background="${1}"
-    shift
     (
         echo "Launching pid=$$: '$@'"
         {
@@ -54,23 +56,18 @@ launch() {
     ) &
     pid=$!
     sleep 30
-    if ! ps -p ${pid} >/dev/null 2>&1; then
+    if ! ps -p ${pid} >/dev/null 2>&1
+    then
         echo
         echo "Error launching '$@'."
         rvalue=1
     else
-        if [[ -z "${background}" ]] && [[ "${background}" == "bg" ]]
-        then
-            wait ${pid} 2>/dev/null
-            rvalue=$?
-            echo "Finish pid=${pid}: ${rvalue}"
-        else
-            rvalue=0
-            echo "Background pid=${pid}: 0"
-        fi
+        echo "Background pid=${pid}: 0"
+        rvalue=0
     fi
     return ${rvalue}
 }
+
 
 random_string() {
     (
@@ -78,15 +75,17 @@ random_string() {
     )
 }
 
+
 get_binding_service() {
     local binding_name="${1}"
     jq --arg b "${binding_name}" '.[][] | select(.binding_name == $b)' <<<"${VCAP_SERVICES}"
 }
 
+
 get_db_vcap_service() {
     local binding_name="${1}"
 
-    if [ -z "${binding_name}" ] || [ "${binding_name}" == "null" ]
+    if [[ -z "${binding_name}" ]] || [[ "${binding_name}" == "null" ]]
     then
         # search for a sql service looking at the label
         jq '[.[][] | select(.credentials.uri) | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
@@ -95,27 +94,31 @@ get_db_vcap_service() {
     fi
 }
 
+
 get_db_vcap_service_type() {
     local db="${1}"
     jq -r '.credentials.uri | split(":")[0]' <<<"${db}"
 }
+
 
 get_prometheus_vcap_service() {
     # search for a sql service looking at the label
     jq '[.[][] | select(.credentials.prometheus) ] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
 }
 
+
 service_on_GCP() {
     local db="${1}"
     jq -e '.tags | contains(["gcp"])' <<<"${db}" >/dev/null
 }
 
+
 env_DB() {
     DB_TYPE="sqlite3"
     DB_USER="root"
-    DB_HOST="127.0.0.1"
+    DB_HOST=""
     DB_PASS=""
-    DB_PORT="3306"
+    DB_PORT=""
     DB_NAME="grafana"
     DB_CA_CERT=""
     DB_CLIENT_CERT=""
@@ -123,6 +126,7 @@ env_DB() {
     DB_CERT_NAME=""
     DB_TLS=""
 }
+
 
 set_DB() {
     local db="${1}"
@@ -136,11 +140,11 @@ set_DB() {
         DB_USER=$(jq -r '.credentials.Username' <<<"${db}")
         DB_PASS=$(jq -r '.credentials.Password' <<<"${db}")
         DB_NAME=$(jq -r '.credentials.database_name' <<<"${db}")
-        if [ "${DB_TYPE}" == "mysql" ]
+        if [[ "${DB_TYPE}" == "mysql" ]]
         then
             DB_PORT="3306"
             DB_TLS="false"
-        elif [ "${DB_TYPE}" == "postgres" ]
+        elif [[ "${DB_TYPE}" == "postgres" ]]
         then
             DB_PORT="5432"
             DB_TLS="disable"
@@ -165,10 +169,10 @@ set_DB() {
         DB_CA_CERT="${AUTH_ROOT}/${DB_NAME}-ca.crt"
         DB_CLIENT_CERT="${AUTH_ROOT}/${DB_NAME}-client.crt"
         DB_CLIENT_KEY="${AUTH_ROOT}/${DB_NAME}-client.key"
-        if [ "${DB_TYPE}" == "mysql" ]
+        if [[ "${DB_TYPE}" == "mysql" ]]
         then
             service_on_GCP "${db}" && DB_TLS="true" || DB_TLS="skip-verify"
-        elif [ "${DB_TYPE}" == "postgres" ]
+        elif [[ "${DB_TYPE}" == "postgres" ]]
         then
             service_on_GCP "${db}" && DB_TLS="verify-full" || DB_TLS="require"
         fi
@@ -184,18 +188,18 @@ set_DB_proxy() {
     local db="${1}"
 
     local proxy
-
     # Proxy on Google, creates 2 files if needed
     if service_on_GCP "${db}"
     then
         jq -r '.credentials.PrivateKeyData' <<<"${db}" | base64 -d > "${AUTH_ROOT}/${DB_NAME}-auth.json"
         proxy=$(jq -r '.credentials.ProjectId + ":" + .credentials.region + ":" + .credentials.instance_name' <<<"${db}")
         echo "${proxy}=tcp:${DB_PORT}" > "${AUTH_ROOT}/${DB_NAME}.proxy"
-        [ "${DB_TYPE}" == "mysql" ] && DB_TLS="false"
-        [ "${DB_TYPE}" == "postgres" ] && DB_TLS="disable"
+        [[ "${DB_TYPE}" == "mysql" ]] && DB_TLS="false"
+        [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="disable"
         DB_HOST="127.0.0.1"
     fi
 }
+
 
 # Sets all DB
 set_sql_databases() {
@@ -205,12 +209,13 @@ set_sql_databases() {
     env_DB
 
     db=$(get_db_vcap_service "${DB_BINDING_NAME}")
-    if [ -n "${db}" ]
+    if [[ -n "${db}" ]]
     then
         set_DB "${db}" >/dev/null
         set_DB_proxy "${db}"
     fi
 }
+
 
 set_vcap_datasource_prometheus() {
     local datasource="${1}"
@@ -221,38 +226,39 @@ set_vcap_datasource_prometheus() {
     local url=$(jq -r '.credentials.prometheus.url' <<<"${datasource}")
     local auth="true"
 
-    [ -z "${user}" ] && auth="false"
+    [[ -z "${user}" ]] && auth="false"
     mkdir -p "${APP_ROOT}/datasources"
 
-    cat <<EOF > "${APP_ROOT}/datasources/00_${label}.yml"
-apiVersion: 1
-
-# list of datasources that should be deleted from the database
-deleteDatasources:
-
-# list of datasources to insert/update depending
-# what's available in the database
-datasources:
-- name: ${label}
-  type: prometheus
-  access: proxy
-  orgId: 1
-  url: "${url}"
-  basicAuth: ${auth}
-  basicAuthUser: ${user}
-  basicAuthPassword: ${pass}
-  withCredentials: false
-  isDefault: true
-  editable: false
-EOF
+    # Be careful, this is a HERE doc with tabs indentation!!
+    cat <<-EOF > "${APP_ROOT}/datasources/00_${label}.yml"
+	apiVersion: 1
+	
+	# list of datasources that should be deleted from the database
+	deleteDatasources:
+	
+	# list of datasources to insert/update depending
+	# what's available in the database
+	datasources:
+	- name: ${label}
+	  type: prometheus
+	  access: proxy
+	  orgId: ${HOME_ORG_ID}
+	  url: "${url}"
+	  basicAuth: ${auth}
+	  basicAuthUser: ${user}
+	  basicAuthPassword: ${pass}
+	  withCredentials: false
+	  isDefault: true
+	  editable: false
+	EOF
 }
 
 set_datasources() {
     local datasource
 
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
-    [ -z "${datasource}" ] && datasource=$(get_prometheus_vcap_service)
-    if [ -n "${datasource}" ]
+    [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
+    if [[ -n "${datasource}" ]]
     then
         set_vcap_datasource_prometheus "${datasource}"
     fi
@@ -275,7 +281,7 @@ set_seed_secrets() {
 
 install_grafana_plugins() {
     echo "Initializing plugins from ${GRAFANA_CFG_PLUGINS} ..."
-    if [ -f "${GRAFANA_CFG_PLUGINS}" ]
+    if [[ -f "${GRAFANA_CFG_PLUGINS}" ]]
     then
         while read -r pluginid pluginversion
         do
@@ -289,44 +295,55 @@ install_grafana_plugins() {
 }
 
 run_sql_proxies() {
-    local instance dbname
+    local instance
+    local dbname
+
     for filename in $(find ${AUTH_ROOT} -name '*.proxy')
     do
         dbname=$(basename "${filename}" | sed -n 's/^\(.*\)\.proxy$/\1/p')
         instance=$(head "${filename}")
         echo "Launching local sql proxy for instance ${instance} ..."
-        launch bg cloud_sql_proxy -instances="${instance}" -credential_file="${AUTH_ROOT}/${dbname}-auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
+        launch cloud_sql_proxy -instances="${instance}" -credential_file="${AUTH_ROOT}/${dbname}-auth.json" -verbose -term_timeout=30s -ip_address_types=PRIVATE,PUBLIC
     done
 }
 
 run_grafana_server() {
     echo "Launching grafana server ..."
     pushd "${GRAFANA_ROOT}" >/dev/null
-        if [ -f "${GRAFANA_CFG_INI}" ]
+        if [[ -f "${GRAFANA_CFG_INI}" ]]
         then
-            launch bg grafana-server -config=${GRAFANA_CFG_INI}
+            launch grafana-server -config=${GRAFANA_CFG_INI}
         else
-            launch bg grafana-server
+            launch grafana-server
         fi
     popd
 }
 
-run() {
-    local pid
-    run_sql_proxies
-    if [ -x "${GRAFANA_POST_START}" ]
+set_homedashboard() {
+    local dashboard_httpcode=()
+    local dashboard_id
+
+    readarray -t dashboard_httpcode <<< $(
+        curl -s -w "\n%{response_code}\n" \
+        -H 'Content-Type: application/json;charset=UTF-8' \
+        -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
+    )
+    if [[ "${dashboard_httpcode[1]}" == "200" ]]
     then
-        ( run_grafana_server ) &
-        pid=$!
-        sleep 10
-        echo "Running post-start script ..."
-        ( 
-            cd $(dirname "${GRAFANA_POST_START}")
-            ${GRAFANA_POST_START}
+        dashboard_id=$(jq '.dashboard.id' <<< ${dashboard_httpcode[0]})
+        echo "Defining default home dashboard for org ${HOME_ORG_ID}: "$(
+        curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                 -H 'Content-Type: application/json;charset=UTF-8' \
+                 -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
+                 --data-binary "{\"homeDashboardId\":${dashboard_id}}" \
+                 "http://127.0.0.1:${PORT}/api/org/preferences"
         )
-        wait ${pid}
+    elif [[ "${dashboard_httpcode[1]}" == "404" ]]
+    then
+        echo "No default home dashboard for org ${HOME_ORG_ID} has been found"
     else
-        run_grafana_server
+        echo "Error setting default HOME dashboard: ${dashboard_httpcode[0]}"
     fi
 }
 
@@ -335,5 +352,14 @@ run() {
 set_sql_databases
 set_seed_secrets
 set_datasources
-install_grafana_plugins
-run
+
+# Run
+(
+    install_grafana_plugins
+    run_sql_proxies
+    run_grafana_server
+) &
+# Set home dashboard only on the first instance
+[[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && set_homedashboard
+wait
+
