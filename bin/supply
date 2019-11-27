@@ -63,7 +63,7 @@ mkdir -p "${SQLPROXY_DIR}"
 cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
 chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
 
-echo "-----> Symlinking properties and default configuration"
+echo "-----> Symlinking Grafana properties and defining default configuration settings"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
 mkdir -p "$BUILD_DIR/.profile.d"
