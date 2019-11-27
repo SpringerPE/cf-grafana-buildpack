@@ -55,14 +55,14 @@ launch() {
         }
     ) &
     pid=$!
-    sleep 30
+    sleep 15
     if ! ps -p ${pid} >/dev/null 2>&1
     then
         echo
         echo "Error launching '$@'."
         rvalue=1
     else
-        echo "Background pid=${pid}: 0"
+        echo "Pid=${pid} running"
         rvalue=0
     fi
     return ${rvalue}
@@ -358,6 +358,7 @@ set_datasources
 install_grafana_plugins
 run_sql_proxies
 run_grafana_server &
+echo HOLA
 # Set home dashboard only on the first instance
 [[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && set_homedashboard
 wait
