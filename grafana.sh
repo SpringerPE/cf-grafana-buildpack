@@ -339,7 +339,7 @@ set_homedashboard() {
                  -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
                  --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
                  "http://127.0.0.1:${PORT}/api/org/preferences"
-        )
+        || true)
         echo "Defined default home dashboard id ${dashboard_id} for org ${HOME_ORG_ID}: ${output}"
     elif [[ "${dashboard_httpcode[1]}" == "404" ]]
     then
