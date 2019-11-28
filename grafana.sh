@@ -323,29 +323,45 @@ run_grafana_server() {
 set_homedashboard() {
     local dashboard_httpcode=()
     local dashboard_id
+    local counter=30
+    local status=0
 
-    readarray -t dashboard_httpcode <<<$(
-        curl -s -w "\n%{response_code}\n" \
-        -H 'Content-Type: application/json;charset=UTF-8' \
-        -u "${ADMIN_USER}:${ADMIN_PASS}" \
-        "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
-    )
-    if [[ "${dashboard_httpcode[1]}" == "200" ]]
+    while [[ ${counter} -gt 0 ]]
+    do
+        if status=$(curl -s -o /dev/null -w '%{http_code}' \
+                -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
+                "http://127.0.0.1:${PORT}/api/org/preferences")
+        then
+            [[ ${status} -eq 200 ]] && break
+        fi
+        sleep 2
+        counter=$((counter - 1))
+    done
+    if [[ ${status} -eq 200 ]]
     then
-        dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
-        output=$(
-            curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
-                 -H 'Content-Type: application/json;charset=UTF-8' \
-                 -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
-                 --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
-                 "http://127.0.0.1:${PORT}/api/org/preferences" \
-        || true)
-        echo "Defined default home dashboard id ${dashboard_id} for org ${HOME_ORG_ID}: ${output}"
-    elif [[ "${dashboard_httpcode[1]}" == "404" ]]
-    then
-        echo "No default home dashboard for org ${HOME_ORG_ID} has been found"
+        readarray -t dashboard_httpcode <<<$(
+            curl -s -w "\n%{response_code}\n" \
+            -u "${ADMIN_USER}:${ADMIN_PASS}" \
+            "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
+        )
+        if [[ "${dashboard_httpcode[1]}" == "200" ]]
+        then
+            dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
+            output=$(curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                     -H 'Content-Type: application/json;charset=UTF-8' \
+                     -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
+                     --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
+                     "http://127.0.0.1:${PORT}/api/org/preferences")
+            echo "Defined default home dashboard id ${dashboard_id} for org ${HOME_ORG_ID}: ${output}"
+        elif [[ "${dashboard_httpcode[1]}" == "404" ]]
+        then
+            echo "No default home dashboard for org ${HOME_ORG_ID} has been found"
+        else
+            echo "Error setting default HOME dashboard: ${dashboard_httpcode[0]}"
+        fi
     else
-        echo "Error setting default HOME dashboard: ${dashboard_httpcode[0]}"
+        echo "Error setting querying preferences to set default dashboard: ${status}"
     fi
 }
 
@@ -362,7 +378,6 @@ run_grafana_server &
 # Set home dashboard only on the first instance
 if [[ "${CF_INSTANCE_INDEX:-0}" == "0" ]]
 then
-    sleep 20
     set_homedashboard
 fi
 wait
