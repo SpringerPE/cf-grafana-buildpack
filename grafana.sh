@@ -251,11 +251,13 @@ set_vcap_datasource_prometheus() {
     mkdir -p "${APP_ROOT}/datasources"
 
     # Be careful, this is a HERE doc with tabs indentation!!
-    cat <<-EOF > "${APP_ROOT}/datasources/00_${label}.yml"
+    cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}_${label}.yml"
 	apiVersion: 1
 	
 	# list of datasources that should be deleted from the database
 	deleteDatasources:
+	- name: ${label}
+	  orgId: ${HOME_ORG_ID}
 	
 	# list of datasources to insert/update depending
 	# what's available in the database
