@@ -242,6 +242,7 @@ set_vcap_datasource_prometheus() {
     local datasource="${1}"
 
     local label=$(jq -r '.label' <<<"${datasource}")
+    local name=$(jq -r '.name' <<<"${datasource}")
     local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
     local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
     local url=$(jq -r '.credentials.prometheus.url' <<<"${datasource}")
@@ -251,18 +252,18 @@ set_vcap_datasource_prometheus() {
     mkdir -p "${APP_ROOT}/datasources"
 
     # Be careful, this is a HERE doc with tabs indentation!!
-    cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}_${label}.yml"
+    cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}_${name}.yml"
 	apiVersion: 1
 	
 	# list of datasources that should be deleted from the database
 	deleteDatasources:
-	- name: ${label}
+	- name: ${name}
 	  orgId: ${HOME_ORG_ID}
 	
 	# list of datasources to insert/update depending
 	# what's available in the database
 	datasources:
-	- name: ${label}
+	- name: ${name}
 	  type: prometheus
 	  access: proxy
 	  orgId: ${HOME_ORG_ID}
