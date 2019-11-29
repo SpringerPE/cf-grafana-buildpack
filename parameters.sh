@@ -1,7 +1,7 @@
 # Variables, this file is designed to be sourced by supply
 
 # default versions
-GRAFANA_VERSION="${GRAFANA_VERSION:-6.4.4}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-6.5.1}"
 CLOUDSQL_PROXY_VERSION="${CLOUDSQL_PROXY_VERSION:-1.13}"
 
 # Download URLS
