@@ -37,7 +37,8 @@ applications:
   instances: 1
   stack: cflinuxfs3
   random-route: true
-  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
+  buildpacks:
+  - https://github.com/SpringerPE/cf-grafana-buildpack.git
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
@@ -95,8 +96,9 @@ This buildpack is highly flexible, these are some keypoints to match the officia
 
 Apart of the Grafana environment variables, you can define these ones:
 
-* **ADMIN_USER**: main admin user, default is `admin`)
-* **ADMIN_PASS**: admin password, defautl is `admin`)
+* **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.
+* **ADMIN_USER**: main admin user (default is `admin`)
+* **ADMIN_PASS**: admin password (defautl is `admin`)
 * **SECRET_KEY**: Used for signing some datasource settings like secrets and passwords. Cannot be changed without requiring an update to datasource settings to re-encode them. Because this variable is so important, if it is not defined, **it defaults to the space uuid** where the app is running.
 * **DOMAIN**: uri of the application, defauls to the first route in CF.
 * **EMAIL**: when a smtp is configured this is the `from` field, defaults to `grafana@$DOMAIN`.
