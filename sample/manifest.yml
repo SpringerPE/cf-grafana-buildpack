@@ -10,4 +10,6 @@ applications:
     ADMIN_USER: admin
     ADMIN_PASS: admin
     SECRET_KEY: balbllablalbala
-
+  services:
+    - grafana-test
+    - grafana-prometheus-test
