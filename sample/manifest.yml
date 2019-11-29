@@ -1,14 +1,16 @@
 ---
 applications:
-- name: grafana
+- name: mygrafana
   memory: 512M
   instances: 1
   stack: cflinuxfs3
-  routes:
-  - route: grafana.app
-  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
+  random-route: true
+  buildpacks:
+  - https://github.com/SpringerPE/cf-grafana-buildpack.git
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
     SECRET_KEY: balbllablalbala
-
+  #services:
+  #- grafana-test
+  #- grafana-prometheus-test
