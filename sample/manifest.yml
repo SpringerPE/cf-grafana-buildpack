@@ -5,7 +5,8 @@ applications:
   instances: 1
   stack: cflinuxfs3
   random-route: true
-  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git#dev
+  buildpacks:
+  - https://github.com/SpringerPE/cf-grafana-buildpack.git#dev
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
