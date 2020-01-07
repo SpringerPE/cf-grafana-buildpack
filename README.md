@@ -2,7 +2,7 @@
 
 Cloudfoundry buildpack to deploy grafana 6 and get it automatically configured.
 This buildpack is able to automatically setup a database from a service broker
-instance (bot mysql and postgres are supported) if no database connection is provided
+instance (both mysql and postgres are supported) if no database connection is provided
 it will use a sqlite database.
 
 When you can skip having a proper DB (mysql or postgres):
