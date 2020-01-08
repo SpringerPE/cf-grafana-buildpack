@@ -287,6 +287,7 @@ set_datasources() {
     if [[ -n "${datasource}" ]]
     then
         set_vcap_datasource_prometheus "${datasource}"
+        echo "camptocamp-prometheus-alertmanager-datasource 0.0.7" > ${GRAFANA_CFG_PLUGINS}
     fi
 }
 
