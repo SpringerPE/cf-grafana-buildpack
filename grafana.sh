@@ -263,7 +263,7 @@ set_vcap_datasource_prometheus() {
 	# list of datasources to insert/update depending
 	# what's available in the database
 	datasources:
-	- name: ${name}
+	- name: ${name} Prometheus
 	  type: prometheus
 	  access: proxy
 	  orgId: ${HOME_ORG_ID}
