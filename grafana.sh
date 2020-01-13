@@ -317,7 +317,7 @@ set_vcap_datasource_alertmanager() {
 	  secureJsonData:
 	    basicAuthPassword: ${pass}
 	  withCredentials: false
-	  isDefault: true
+	  isDefault: false
 	  editable: true
 	EOF
 }
