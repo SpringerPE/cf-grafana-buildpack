@@ -311,7 +311,7 @@ set_vcap_datasource_alertmanager() {
 	  type: camptocamp-prometheus-alertmanager-datasource
 	  access: proxy
 	  orgId: ${HOME_ORG_ID}
-	  url: "${url}/prometheus/metrics"
+	  url: "${url}/alerts"
 	  basicAuth: ${auth}
 	  basicAuthUser: ${user}
 	  secureJsonData:
