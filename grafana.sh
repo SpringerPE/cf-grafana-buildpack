@@ -286,7 +286,7 @@ set_vcap_datasource_alertmanager() {
     local name=$(jq -r '.name' <<<"${datasource}")
     local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
     local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
-    local url=$(jq -r '.credentials.prometheus.url' <<<"${datasource}")
+    local url=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
     local auth="true"
 
     [[ -z "${user}" ]] && auth="false"
@@ -311,7 +311,7 @@ set_vcap_datasource_alertmanager() {
 	  type: camptocamp-prometheus-alertmanager-datasource
 	  access: proxy
 	  orgId: ${HOME_ORG_ID}
-	  url: "${url}/alertmanager/#/alerts"
+	  url: "${url}"
 	  basicAuth: ${auth}
 	  basicAuthUser: ${user}
 	  secureJsonData:
