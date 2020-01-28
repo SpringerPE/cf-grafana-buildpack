@@ -292,7 +292,7 @@ set_datasources() {
 
 
 set_seed_secrets() {
-    if [[ -z "${SECRET_KEY}" ]]
+    if [[ -z "${SECRET_KEY-}" ]]
     then
         # Take it from the space_id. It is not random!
         export SECRET_KEY=$(jq -r '.space_id' <<<"${VCAP_APPLICATION}")
