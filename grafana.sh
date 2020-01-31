@@ -299,6 +299,7 @@ set_vcap_datasource_alertmanager() {
         # Only create datasources directory if it is not already created in set_vcap_datasource_prometheus()
         mkdir -p "${APP_ROOT}/datasources"
     fi
+    set -e
 
     # Be careful, this is a HERE doc with tabs indentation!!
     cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}-alertmanager.yml"
@@ -329,11 +330,12 @@ set_datasources() {
     [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
     if [[ -n "${datasource}" ]]
     then
-        echo "camptocamp-prometheus-alertmanager-datasource 0.0.7" > ${GRAFANA_CFG_PLUGINS}
+        echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
         set_vcap_datasource_prometheus "${datasource}"
         set_vcap_datasource_alertmanager "${datasource}"
     fi
 }
+
 
 
 set_seed_secrets() {
