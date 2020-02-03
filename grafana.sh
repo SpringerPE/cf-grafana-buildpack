@@ -290,16 +290,7 @@ set_vcap_datasource_alertmanager() {
     local auth="true"
 
     [[ -z "${user}" ]] && auth="false"
-
-    set +e
-    datasources_folder_exists="$(ls "${APP_ROOT}/datasources")"
-    datasources_folder_exists_exit_code=$?
-    if [[ ${datasources_folder_exists_exit_code} -eq 1 ]]
-    then
-        # Only create datasources directory if it is not already created in set_vcap_datasource_prometheus()
-        mkdir -p "${APP_ROOT}/datasources"
-    fi
-    set -e
+    mkdir -p "${APP_ROOT}/datasources"
 
     # Be careful, this is a HERE doc with tabs indentation!!
     cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}-alertmanager.yml"
