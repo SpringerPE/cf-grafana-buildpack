@@ -264,7 +264,7 @@ set_vcap_datasource_prometheus() {
 	# list of datasources to insert/update depending
 	# what's available in the database
 	datasources:
-	- name: ${name}
+	- name: ${name} Prometheus
 	  type: prometheus
 	  access: proxy
 	  orgId: ${HOME_ORG_ID}
@@ -280,6 +280,41 @@ set_vcap_datasource_prometheus() {
 }
 
 
+set_vcap_datasource_alertmanager() {
+    local datasource="${1}"
+
+    local label=$(jq -r '.label' <<<"${datasource}")
+    local name=$(jq -r '.name' <<<"${datasource}")
+    local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
+    local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
+    local url=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+    local auth="true"
+
+    [[ -z "${user}" ]] && auth="false"
+    mkdir -p "${APP_ROOT}/datasources"
+
+    # Be careful, this is a HERE doc with tabs indentation!!
+    cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}-alertmanager.yml"
+	apiVersion: 1
+	
+	# list of datasources to insert/update depending
+	# what's available in the database
+	datasources:
+	- name: ${name} AlertManager
+	  type: camptocamp-prometheus-alertmanager-datasource
+	  access: proxy
+	  orgId: ${HOME_ORG_ID}
+	  url: "${url}"
+	  basicAuth: ${auth}
+	  basicAuthUser: ${user}
+	  secureJsonData:
+	    basicAuthPassword: ${pass}
+	  withCredentials: false
+	  isDefault: false
+	  editable: true
+	EOF
+}
+
 set_datasources() {
     local datasource
 
@@ -287,9 +322,12 @@ set_datasources() {
     [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
     if [[ -n "${datasource}" ]]
     then
+        echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
         set_vcap_datasource_prometheus "${datasource}"
+        set_vcap_datasource_alertmanager "${datasource}"
     fi
 }
+
 
 
 set_seed_secrets() {
