@@ -292,6 +292,8 @@ set_vcap_datasource_alertmanager() {
     [[ -z "${user}" ]] && auth="false"
     mkdir -p "${APP_ROOT}/datasources"
 
+    if [[ "${url}X" == "X" ]]
+    then
     # Be careful, this is a HERE doc with tabs indentation!!
     cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}-alertmanager.yml"
 	apiVersion: 1
@@ -312,6 +314,7 @@ set_vcap_datasource_alertmanager() {
 	  isDefault: false
 	  editable: true
 	EOF
+    fi
 }
 
 set_datasources() {
