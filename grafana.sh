@@ -318,10 +318,11 @@ set_vcap_datasource_alertmanager() {
 set_datasources() {
     local datasource
 
-    local alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
     [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
+
+    local alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+
     if [[ -n "${datasource}" ]]
     then
         set_vcap_datasource_prometheus "${datasource}"
