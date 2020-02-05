@@ -292,8 +292,6 @@ set_vcap_datasource_alertmanager() {
     [[ -z "${user}" ]] && auth="false"
     mkdir -p "${APP_ROOT}/datasources"
 
-    if [[ "${url}" == *"alertmanager" ]]
-    then
     # Be careful, this is a HERE doc with tabs indentation!!
     cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}-alertmanager.yml"
 	apiVersion: 1
@@ -314,19 +312,27 @@ set_vcap_datasource_alertmanager() {
 	  isDefault: false
 	  editable: true
 	EOF
-    fi
+
 }
 
 set_datasources() {
     local datasource
 
+    local alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
     [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
     if [[ -n "${datasource}" ]]
     then
-        echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
         set_vcap_datasource_prometheus "${datasource}"
-        set_vcap_datasource_alertmanager "${datasource}"
+
+        # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
+        # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
+        if [[ "${alertmanager_prometheus_exists}" == *"alertmanager" ]]
+        then
+            echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
+            set_vcap_datasource_alertmanager "${datasource}"
+        fi
     fi
 }
 
