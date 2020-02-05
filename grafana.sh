@@ -17,18 +17,19 @@ export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
 
 ### Bindings
 # Prometheus datasource
-export DATASOURCE_BINDING_NAME=${DATASOURCE_BINDING_NAME:-datasource}
+export DATASOURCE_BINDING_NAME="${DATASOURCE_BINDING_NAME:-datasource}"
 # SQL DB
-export DB_BINDING_NAME=${DB_BINDING_NAME:-}
+export DB_BINDING_NAME="${DB_BINDING_NAME:-}"
 
 # Exported variables used in default.ini config file
 export DOMAIN=${DOMAIN:-$(jq -r '.uris[0]' <<<"${VCAP_APPLICATION}")}
-export URL=${URL:-http://$DOMAIN/}
-export HOME_DASHBOARD_UID=${HOME_DASHBOARD_UID:-home}
-export HOME_ORG_ID=${HOME_ORG_ID:-1}
-export ADMIN_USER=${ADMIN_USER:-admin}
-export ADMIN_PASS=${ADMIN_PASS:-admin}
-export EMAIL=${EMAIL:-grafana@$DOMAIN}
+export URL="${URL:-http://$DOMAIN/}"
+export HOME_DASHBOARD_UID="${HOME_DASHBOARD_UID:-home}"
+export HOME_ORG_ID="${HOME_ORG_ID:-1}"
+export ADMIN_USER="${ADMIN_USER:-admin}"
+export ADMIN_PASS="${ADMIN_PASS:-admin}"
+export EMAIL="${EMAIL:-grafana@$DOMAIN}"
+export SECRET_KEY="${SECRET_KEY:-}"
 
 # Variables exported, they are automatically filled from the 
 # service broker instances.
@@ -312,7 +313,6 @@ set_vcap_datasource_alertmanager() {
 	  isDefault: false
 	  editable: true
 	EOF
-
 }
 
 set_datasources() {
