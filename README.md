@@ -86,7 +86,7 @@ First have a look at the official documentation of Grafana: http://docs.grafana.
 
 This buildpack is highly flexible, these are some keypoints to match the official documentation with this buildpack implementation.
 
-* The app folder is the `provisioning` folder specified in the documentation, so you can create these directories: `datasources`, `dashboards`, `notifiers` there as the official documenation says.
+* The app folder is the `provisioning` folder [specified in the documentation](https://grafana.com/docs/grafana/latest/administration/provisioning/), so you can create these directories: `datasources`, `dashboards`, `notifiers` there as the official documenation says.
 * The default configuration refereed as `defaults.ini` is provided and customized for the buildpack: https://github.com/SpringerPE/cf-grafana-buildpack/blob/master/defaults.ini
 * The custom configuration file referred as `custom.ini` will be applied automatically by placing a file named `grafana.ini` in the root folder of the app, so `custom.ini` is called `grafana.ini`.
 * You can use all environment variables to setup Grafana (`GF_*`), except the ones in the `[paths]` section of the configuration file.
@@ -97,6 +97,7 @@ This buildpack is highly flexible, these are some keypoints to match the officia
 Apart of the Grafana environment variables, you can define these ones:
 
 * **DEFAULT_DATASOURCE_EDITABLE** (default `false`). By default the auto-generated datasources for Prometheus and Alertmanager are not editable. Changing this value makes then editable, but if you do not use a DB be aware that changes on their properties will be lost after redeploy grafana.
+* **DEFAULT_DATASOURCE_TIMEINTERVAL** (default `60s`). Lowest interval/step value that should be used for default generated data source.
 * **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.
 * **ADMIN_USER**: main admin user (default is `admin`)
 * **ADMIN_PASS**: admin password (defautl is `admin`)
