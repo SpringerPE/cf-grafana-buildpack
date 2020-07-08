@@ -30,7 +30,8 @@ export ADMIN_USER="${ADMIN_USER:-admin}"
 export ADMIN_PASS="${ADMIN_PASS:-admin}"
 export EMAIL="${EMAIL:-grafana@$DOMAIN}"
 export SECRET_KEY="${SECRET_KEY:-}"
-export DEFAULT_DATASOURCE_EDITABLE=${DEFAULT_DATASOURCE_EDITABLE:-false}
+export DEFAULT_DATASOURCE_EDITABLE="${DEFAULT_DATASOURCE_EDITABLE:-false}"
+export DEFAULT_DATASOURCE_TIMEINTERVAL="${DEFAULT_DATASOURCE_TIMEINTERVAL:-60s}"
 
 # Variables exported, they are automatically filled from the 
 # service broker instances.
@@ -272,6 +273,8 @@ set_vcap_datasource_prometheus() {
 	  url: "${url}"
 	  basicAuth: ${auth}
 	  basicAuthUser: ${user}
+	  jsonData:
+	    timeInterval: "${DEFAULT_DATASOURCE_TIMEINTERVAL}"
 	  secureJsonData:
 	    basicAuthPassword: ${pass}
 	  withCredentials: false
