@@ -96,6 +96,7 @@ This buildpack is highly flexible, these are some keypoints to match the officia
 
 Apart of the Grafana environment variables, you can define these ones:
 
+* **DEFAULT_DATASOURCE_EDITABLE** (default `false`). By default the auto-generated datasources for Prometheus and Alertmanager are not editable. Changing this value makes then editable, but if you do not use a DB be aware that changes on their properties will be lost after redeploy grafana.
 * **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.
 * **ADMIN_USER**: main admin user (default is `admin`)
 * **ADMIN_PASS**: admin password (defautl is `admin`)

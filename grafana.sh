@@ -30,6 +30,7 @@ export ADMIN_USER="${ADMIN_USER:-admin}"
 export ADMIN_PASS="${ADMIN_PASS:-admin}"
 export EMAIL="${EMAIL:-grafana@$DOMAIN}"
 export SECRET_KEY="${SECRET_KEY:-}"
+export DEFAULT_DATASOURCE_EDITABLE=${DEFAULT_DATASOURCE_EDITABLE:-false}
 
 # Variables exported, they are automatically filled from the 
 # service broker instances.
@@ -275,7 +276,7 @@ set_vcap_datasource_prometheus() {
 	    basicAuthPassword: ${pass}
 	  withCredentials: false
 	  isDefault: true
-	  editable: false
+	  editable: ${DEFAULT_DATASOURCE_EDITABLE}
 	EOF
 }
 
@@ -311,17 +312,16 @@ set_vcap_datasource_alertmanager() {
 	    basicAuthPassword: ${pass}
 	  withCredentials: false
 	  isDefault: false
-	  editable: true
+	  editable: ${DEFAULT_DATASOURCE_EDITABLE}
 	EOF
 }
 
 set_datasources() {
     local datasource
+    local alertmanager_prometheus_exists
 
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
     [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
-
-    local alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
 
     if [[ -n "${datasource}" ]]
     then
@@ -329,6 +329,7 @@ set_datasources() {
 
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
+        alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
         if [[ "${alertmanager_prometheus_exists}" == *"alertmanager" ]]
         then
             echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
