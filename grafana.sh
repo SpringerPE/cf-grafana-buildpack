@@ -314,6 +314,9 @@ set_vcap_datasource_alertmanager() {
 	  isDefault: false
 	  editable: ${DEFAULT_DATASOURCE_EDITABLE}
 	EOF
+
+    echo "Installing camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION} ..."
+    grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}
 }
 
 set_datasources() {
@@ -330,11 +333,7 @@ set_datasources() {
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-        if [[ "${alertmanager_prometheus_exists}" == *"alertmanager" ]]
-        then
-            echo "camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}" >> ${GRAFANA_CFG_PLUGINS}
-            set_vcap_datasource_alertmanager "${datasource}"
-        fi
+        [[ "${alertmanager_prometheus_exists}" == *"alertmanager" ]] && set_vcap_datasource_alertmanager "${datasource}"
     fi
 }
 
