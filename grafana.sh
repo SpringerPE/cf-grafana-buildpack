@@ -336,7 +336,10 @@ set_datasources() {
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-        [[ "${alertmanager_prometheus_exists}" == *"alertmanager" ]] && set_vcap_datasource_alertmanager "${datasource}"
+	if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+	then
+            set_vcap_datasource_alertmanager "${datasource}"
+        fi
     fi
 }
 
