@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cp -rv  /home/stage/. /home/vcap/app
+
 for script in /home/vcap/app/.profile.d/*
 do
    source ${script}

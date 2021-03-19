@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  grafana:
+    image: "grafana:latest"
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./sample:/home/vcap/app
+    environment:
+      VCAP_APPLICATION: '{"uris":["grafana.example.com"]}'
+      VCAP_SERVICES: ""
+      GRAFANA_VERSION: "7.4.3"
+      PORT: 8080
+
+
+

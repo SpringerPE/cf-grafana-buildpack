@@ -3,19 +3,19 @@
 # create a proper container (Base cflinuxfs3) for proper testing
 cd  /home/buildpack
 
-mkdir -p /home/vcap/app /home/vcap/cache /home/vcap/deps/0 /home/vcap/tmp
+mkdir -p /home/stage /home/vcap/cache /home/vcap/deps/0 /home/vcap/tmp
 
 echo ">> Running detect ..."
-./bin/detect /home/vcap/app
+./bin/detect /home/stage
 
 echo ">> Running supply ..."
-./bin/supply /home/vcap/app /home/vcap/cache /home/vcap/deps 0
+./bin/supply /home/stage /home/vcap/cache /home/vcap/deps 0
 
 echo ">> Running finalize ..."
-./bin/finalize /home/vcap/app /home/vcap/cache /home/vcap/deps 0
+./bin/finalize /home/stage /home/vcap/cache /home/vcap/deps 0
 
 echo ">> Running release ..."
-./bin/release /home/vcap/app
+./bin/release /home/stage
 
 
 
