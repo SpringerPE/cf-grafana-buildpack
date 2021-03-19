@@ -130,7 +130,7 @@ with `#` are ignored, otherwise it will install the version defined in the build
 6.0.1
 ```
 
-This buildpack only supports Grafana 6.x!
+This buildpack only supports Grafana 6.x and 7.x!
 
 You can also define which plugins will be automatically installed in a file `plugins.txt`:
 
