@@ -27,7 +27,7 @@ a lot of pain to other users of this buildpack.
 ## Using it
 
 First of all, this buildpack has no requirements at all, in order to get Grafana working,
-you can create app folder, put a `manifest.yml` like this: 
+you can create app folder, put a `manifest.yml` like this in your root folder: 
 
 ```manifest.yml
 ---
@@ -45,7 +45,7 @@ applications:
     SECRET_KEY: yUeEBtX7eTmh2ixzz0oHsNyyxYmebSat
 ```
 
-and run `cf push`
+and run from the root folder `cf push`
 
 Aditionally by binding the app to a SQL instance (mysql or postgres), 
 everything will be saved in a persistent DB, but this is not really 
