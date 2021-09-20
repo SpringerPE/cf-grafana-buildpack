@@ -173,8 +173,7 @@ set_env_DB() {
     if ! DB_NAME=$(jq -r -e '.credentials.database_name' <<<"${db}")
     then
         DB_NAME=$(jq -r -e '.credentials.uri |
-            split("://")[1] | split(":")[1] |
-            split("@")[1] | split("/")[1] |
+            split("://")[1] | split("/")[1] |
             split("?")[0]' <<<"${db}") || DB_NAME=''
     fi
     uri="${uri}/${DB_NAME}"
