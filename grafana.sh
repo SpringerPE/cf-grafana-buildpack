@@ -132,6 +132,11 @@ set_env_DB() {
     local uri=""
 
     DB_TYPE=$(get_db_vcap_service_type "${db}")
+    if [[ DB_TYPE == "postgresql" ]]
+    then
+	DB_TYPE="postgres"
+    fi
+
     uri="${DB_TYPE}://"
     if ! DB_USER=$(jq -r -e '.credentials.Username' <<<"${db}")
     then
