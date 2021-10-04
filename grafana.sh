@@ -166,7 +166,7 @@ set_env_DB() {
         DB_TLS="false"
     elif [[ "${DB_TYPE}" == "postgres" ]]
     then
-        DB_PORT="5444"
+        DB_PORT="5432"
         uri="${uri}:${DB_PORT}"
         DB_TLS="disable"
     fi
