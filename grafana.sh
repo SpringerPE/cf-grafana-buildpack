@@ -93,7 +93,7 @@ get_db_vcap_service() {
     if [[ -z "${binding_name}" ]] || [[ "${binding_name}" == "null" ]]
     then
         # search for a sql service looking at the label
-        jq '[.[][] | select(.credentials.uri) | select(.credentials.uri | split(":")[0] == ("mysql","postgres"))] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
+        jq '[.[][] | select(.credentials.uri) | select(.credentials.uri | split(":")[0] == ("mysql","postgres","postgresql"))] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
     else
         get_binding_service "${binding_name}"
     fi
@@ -132,6 +132,11 @@ set_env_DB() {
     local uri=""
 
     DB_TYPE=$(get_db_vcap_service_type "${db}")
+    if [[ $DB_TYPE == "postgresql" ]]
+    then
+	DB_TYPE="postgres"
+    fi
+
     uri="${DB_TYPE}://"
     if ! DB_USER=$(jq -r -e '.credentials.Username' <<<"${db}")
     then
@@ -168,8 +173,7 @@ set_env_DB() {
     if ! DB_NAME=$(jq -r -e '.credentials.database_name' <<<"${db}")
     then
         DB_NAME=$(jq -r -e '.credentials.uri |
-            split("://")[1] | split(":")[1] |
-            split("@")[1] | split("/")[1] |
+            split("://")[1] | split("/")[1] |
             split("?")[0]' <<<"${db}") || DB_NAME=''
     fi
     uri="${uri}/${DB_NAME}"
