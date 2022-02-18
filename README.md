@@ -127,10 +127,10 @@ with `#` are ignored, otherwise it will install the version defined in the build
 
 ```runtime.txt
 # Define your grafana version here
-6.0.1
+8.4.1
 ```
 
-This buildpack only supports Grafana 6.x and 7.x!
+This buildpack only supports Grafana 7.x and 8.x!
 
 You can also define which plugins will be automatically installed in a file `plugins.txt`:
 
@@ -207,8 +207,8 @@ Do not forget to define `$URL` with the https protocol!.
 
 # Development
 
-**In order to test new versions of the buildpack, please use `dev` branch** and
-merge with master only when you are sure it works, otherwise it would cause
+In order to test new versions of the buildpack, use `docker-compose build && docker-compose up`
+Please use  a different  branch and merge with master only when you are sure it works, otherwise it would cause
 a lot of pain to other users of this buildpack.
 
 Implemented using bash scripts to make it easy to understand and change.
