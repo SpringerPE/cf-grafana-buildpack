@@ -123,7 +123,7 @@ automatically defined in Grafana. Have a look to the official documentation.
 
 Grafana version can be specified in a file `runtime.txt`. Lines starting
 with `#` are ignored, otherwise it will install the version defined in the buildpack
-(check `bin/supply`), example:
+(check `parameters.sh`), example:
 
 ```runtime.txt
 # Define your grafana version here
