@@ -10,7 +10,7 @@ services:
     environment:
       VCAP_APPLICATION: '{"uris":["grafana.example.com"]}'
       VCAP_SERVICES: ""
-      GRAFANA_VERSION: "8.4.1"
+      GRAFANA_VERSION: "9.0.1"
       PORT: 8080
 
 
