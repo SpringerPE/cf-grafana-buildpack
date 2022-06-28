@@ -1,6 +1,6 @@
 # cf-grafana-buildpack
 
-Cloudfoundry buildpack to deploy grafana 6 and get it automatically configured.
+Cloudfoundry buildpack to deploy Grafana 9 and get it automatically configured.
 This buildpack is able to automatically setup a database from a service broker
 instance (both mysql and postgres are supported) if no database connection is provided
 it will use a sqlite database.
@@ -127,10 +127,10 @@ with `#` are ignored, otherwise it will install the version defined in the build
 
 ```runtime.txt
 # Define your grafana version here
-8.4.1
+9.0.1
 ```
 
-This buildpack only supports Grafana 7.x and 8.x!
+This buildpack only supports Grafana 7.x or greater!
 
 You can also define which plugins will be automatically installed in a file `plugins.txt`:
 
