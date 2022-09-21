@@ -174,7 +174,7 @@ to the DB server using the TLS settings and `PrivateData` auth.
 
 # Using Oauth
 
-For example, to define Oatuh auth with Google, just create a file `grafana.ini` like this:
+For example, to define Oauth auth with Google, just create a file `grafana.ini` like this:
 ```
 [auth.google]
 enabled = true
