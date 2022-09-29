@@ -221,7 +221,6 @@ it will use the cached resources.
 
 # Author
 
-(c) Jose Riguera Lopez  <jose.riguera@springernature.com>
-Springernature Engineering Enablement
+Copyright © Springer Nature
 
 MIT License
