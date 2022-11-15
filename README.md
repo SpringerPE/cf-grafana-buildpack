@@ -127,7 +127,7 @@ with `#` are ignored, otherwise it will install the version defined in the build
 
 ```runtime.txt
 # Define your grafana version here
-9.2.0
+9.2.4
 ```
 
 This buildpack only supports Grafana 7.x or greater!
