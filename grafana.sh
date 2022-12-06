@@ -551,6 +551,7 @@ configure_post_startup() {
 
 ################################################################################
 
+pre-process-dashboards
 set_sql_databases
 set_seed_secrets
 set_datasources
