@@ -11,10 +11,11 @@ export GRAFANA_ROOT=$GRAFANA_ROOT
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
 export YQ_ROOT=${YQ_ROOT}
 export APP_ROOT="${ROOT}/app"
+export GRAFANA_DASHBOARD_ROOT=${APP_ROOT}/dashboards
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
-export GRAFANA_ORG_CONFIG="${ROOT}/app/orgs/orgs.yml"
-export GRAFANA_USER_CONFIG="${ROOT}/app/users/users.yml"
+export GRAFANA_ORG_CONFIG_ROOT="${ROOT}/app/orgs"
+export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
 ### Bindings
@@ -342,14 +343,32 @@ set_datasources() {
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	then
+	  if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+	  then
             set_vcap_datasource_alertmanager "${datasource}"
         fi
     fi
 }
 
+pre-process-dashboards() {
+    if [[ -d "${GRAFANA_DASHBOARD_ROOT}/pre-process" ]]
+    then
+        for pre_process_config_file in "${GRAFANA_DASHBOARD_ROOT}/pre-process/*.yml"
+        do
+            dashboard_file_location=$(yq eval '.dashboard_file_location' ${pre_process_config_file})
 
+            for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
+            do
+                find=$(eval "echo $(echo $replacement | jq '.find')")
+                replace=$(eval "echo $(echo $replacement | jq '.replace')")
+
+                echo "Finding $find in dashboards and replacing with $replace"
+                sed_command="s/$find/$replace/g"
+                sed -i -- $sed_command ${GRAFANA_DASHBOARD_ROOT}/${dashboard_file_location}
+            done
+        done
+    fi
+}
 
 set_seed_secrets() {
     if [[ -z "${SECRET_KEY}" ]]
@@ -441,41 +460,45 @@ set_homedashboard() {
 }
 
 set_orgs() {
-    if [[ -f "${GRAFANA_ORG_CONFIG}" ]]
+    if [[ -d "${GRAFANA_ORG_CONFIG_ROOT}" ]]
     then
-        for org_name in $(yq eval '.orgs[].name' ${GRAFANA_ORG_CONFIG})
+        for org_config_file in "${GRAFANA_ORG_CONFIG_ROOT}/*.yml"
         do
-          echo "Create new Org ID - ${org_name}"
-          curl -s -H "Content-Type: application/json" \
-               -u "${ADMIN_USER}:${ADMIN_PASS}" \
-              -XPOST "http://127.0.0.1:${PORT}/api/orgs" \
-              -d @- <<EOF
+            for org_name in $(yq eval '.orgs[].name' ${org_config_file})
+            do
+              echo "Create new Org ID - ${org_name}"
+              curl -s -H "Content-Type: application/json" \
+                   -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                  -XPOST "http://127.0.0.1:${PORT}/api/orgs" \
+                  -d @- <<EOF
 {
     "name":"${org_name}"
 }
 EOF
-
+            done
         done
     fi
 }
 
 set_users() {
-    if [[ -f "${GRAFANA_USER_CONFIG}" ]]
+    if [[ -d "${GRAFANA_USER_CONFIG_ROOT}" ]]
     then
-        for user in  $(yq eval -o=j -I=0 '.users[]' ${GRAFANA_USER_CONFIG})
+        for user_config_file in "${GRAFANA_USER_CONFIG_ROOT}/*.yml"
         do
-          name=$(eval "echo $(echo $user | jq '.name')")
-          login=$(eval "echo $(echo $user | jq '.login')")
-          password=$(eval "echo $(echo $user | jq '.password')")
-          email=$(eval "echo $(echo $user | jq '.email')")
-          orgId=$(eval "echo $(echo $user | jq '.orgId')")
-          role=$(eval "echo $(echo $user | jq '.role')")
+            for user in  $(yq eval -o=j -I=0 '.users[]' ${user_config_file})
+            do
+                name=$(eval "echo $(echo $user | jq '.name')")
+                login=$(eval "echo $(echo $user | jq '.login')")
+                password=$(eval "echo $(echo $user | jq '.password')")
+                email=$(eval "echo $(echo $user | jq '.email')")
+                orgId=$(eval "echo $(echo $user | jq '.orgId')")
+                role=$(eval "echo $(echo $user | jq '.role')")
 
-          echo "Add user - name: ${name}, login: ${login}, email: ${email}, orgId: ${orgId}"
-          curl -s -H "Content-Type: application/json" \
-               -u "${ADMIN_USER}:${ADMIN_PASS}" \
-              -XPOST "http://127.0.0.1:${PORT}/api/admin/users" \
-              -d @- <<EOF
+                echo "Add user - name: ${name}, login: ${login}, email: ${email}, orgId: ${orgId}"
+                curl -s -H "Content-Type: application/json" \
+                     -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                    -XPOST "http://127.0.0.1:${PORT}/api/admin/users" \
+                    -d @- <<EOF
 {
     "name":"${name}",
     "login":"${login}",
@@ -485,17 +508,17 @@ set_users() {
 }
 EOF
 
-          echo "Associate user ${login} with org ${orgId} and role ${role}"
-          curl -s -H "Content-Type: application/json" \
-               -u "${ADMIN_USER}:${ADMIN_PASS}" \
-              -XPOST "http://127.0.0.1:${PORT}/api/orgs/${orgId}/users" \
-              -d @- <<EOF
+                echo "Associate user ${login} with org ${orgId} and role ${role}"
+                curl -s -H "Content-Type: application/json" \
+                     -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                    -XPOST "http://127.0.0.1:${PORT}/api/orgs/${orgId}/users" \
+                    -d @- <<EOF
 {
     "loginOrEmail":"${login}",
     "role":"${role}"
 }
 EOF
-
+            done
         done
     fi
 }
@@ -522,7 +545,7 @@ configure_post_startup() {
         set_users
         set_homedashboard
     else
-        echo "Error setting querying preferences to set default dashboard: ${status}"
+        echo "Error setting querying preferences to determine grafana application startup: ${status}"
     fi
 }
 
