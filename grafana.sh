@@ -9,12 +9,13 @@ export AUTH_ROOT="${ROOT}/auth"
 export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
+export YQ_ROOT=$YQ_ROOT
 export APP_ROOT="${ROOT}/app"
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_ORG_CONFIG="${ROOT}/app/orgs/orgs.yml"
 export GRAFANA_USER_CONFIG="${ROOT}/app/users/users.yml"
-export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
+export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:$YQ_ROOT
 
 ### Bindings
 # Prometheus datasource

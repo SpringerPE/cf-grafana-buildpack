@@ -23,6 +23,12 @@ mkdir -p "${SQLPROXY_DIR}"
 cp "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" "${SQLPROXY_DIR}/cloud_sql_proxy"
 chmod +x ${SQLPROXY_DIR}/cloud_sql_proxy
 
+echo "-----> Installing yq"
+mkdir -p "${YQ_DIR}"
+tar -zxf "${CACHE_DIR}/yq-${YQ_VERSION}.tar.gz" -C "${YQ_DIR}" --strip-components 1
+mv ${YQ_DIR}/yq_linux_amd64 ${YQ_DIR}/yq
+chmod +x ${YQ_DIR}/yq
+
 echo "-----> Symlinking properties and default configuration"
 rm -rf "${GRAFANA_DIR}/conf/provisioning"
 cp ${BUILDPACK_DIR}/defaults.ini "${GRAFANA_DIR}/conf/"
@@ -31,9 +37,11 @@ cat <<EOF > "$BUILD_DIR/.profile.d/0010_grafana.sh"
 export GRAFANA_VERSION=${GRAFANA_VERSION}
 export CLOUDSQL_PROXY_VERSION=${CLOUDSQL_PROXY_VERSION}
 export GRAFANA_ALERTMANAGER_VERSION=${GRAFANA_ALERTMANAGER_VERSION}
+export YQ_VERSION=${YQ_VERSION}
 
 export GRAFANA_ROOT="/home/vcap/deps/${DEPS_IDX}/grafana"
 export SQLPROXY_ROOT="/home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
+export YQ_ROOT="${YQ_DIR}"
 
 # Avoid overriding these vars by end user vars
 export GF_PATHS_PLUGINS="/home/vcap/app/plugins"
