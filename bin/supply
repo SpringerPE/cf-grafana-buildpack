@@ -55,5 +55,5 @@ else
     fi
 fi
 
-apt-get update
-apt-get install yq
+sudo apt-get update
+sudo apt-get install yq
