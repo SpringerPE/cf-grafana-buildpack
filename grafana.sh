@@ -503,9 +503,6 @@ configure_post_startup() {
     local counter=30
     local status=0
 
-    echo "ADMIN_USER:${ADMIN_USER}"
-    echo "ADMIN_PASS:${ADMIN_PASS}"
-
     while [[ ${counter} -gt 0 ]]
     do
         if status=$(curl -s -o /dev/null -w '%{http_code}' \
