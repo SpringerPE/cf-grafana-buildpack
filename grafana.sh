@@ -460,9 +460,6 @@ EOF
 }
 
 set_users() {
-  echo "Setting users"
-  echo "PATH: ${PATH}"
-  ls -la ${YQ_ROOT}
     if [[ -f "${GRAFANA_USER_CONFIG}" ]]
     then
         for user in  $(yq eval -o=j -I=0 '.users[]' ${GRAFANA_USER_CONFIG})
