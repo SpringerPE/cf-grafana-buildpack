@@ -28,7 +28,7 @@ export URL="${URL:-http://$DOMAIN/}"
 export HOME_DASHBOARD_UID="${HOME_DASHBOARD_UID:-home}"
 export HOME_ORG_ID="${HOME_ORG_ID:-1}"
 export ADMIN_USER="${ADMIN_USER:-${GF_SECURITY_ADMIN_USER:-admin}}"
-export ADMIN_PASS="${ADMIN_PASS:-${GF_SECURITY_ADMIN_PASSWORD:-admin}}}"
+export ADMIN_PASS="${ADMIN_PASS:-${GF_SECURITY_ADMIN_PASSWORD:-admin}}"
 export EMAIL="${EMAIL:-grafana@$DOMAIN}"
 export SECRET_KEY="${SECRET_KEY:-}"
 export DEFAULT_DATASOURCE_EDITABLE="${DEFAULT_DATASOURCE_EDITABLE:-false}"
@@ -502,6 +502,9 @@ EOF
 configure_post_startup() {
     local counter=30
     local status=0
+
+    echo "ADMIN_USER:${ADMIN_USER}"
+    echo "ADMIN_PASS:${ADMIN_PASS}"
 
     while [[ ${counter} -gt 0 ]]
     do
