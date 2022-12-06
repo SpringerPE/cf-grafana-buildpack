@@ -9,7 +9,7 @@ export AUTH_ROOT="${ROOT}/auth"
 export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
-export YQ_ROOT=$YQ_ROOT
+export YQ_ROOT=${YQ_ROOT}
 export APP_ROOT="${ROOT}/app"
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
@@ -460,6 +460,9 @@ EOF
 }
 
 set_users() {
+  echo "Setting users"
+  echo "PATH: ${PATH}"
+  ls -la ${YQ_ROOT}
     if [[ -f "${GRAFANA_USER_CONFIG}" ]]
     then
         for user in  $(yq eval -o=j -I=0 '.users[]' ${GRAFANA_USER_CONFIG})
