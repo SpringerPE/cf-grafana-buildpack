@@ -56,12 +56,12 @@ else
 fi
 
 YQ_DOWNLOAD_URL="https://github.com/mikefarah/yq/releases/tag/v${YQ_VERSION}/yq_linux_amd64.tar.gz"
-if [ -f "${CACHE_DIR}/yq-${YQ_VERSION}.bin" ]
+if [ -f "${CACHE_DIR}/yq-${YQ_VERSION}.tar.gz" ]
 then
     echo "-----> Using yq ${YQ_VERSION} from cache"
 else
     echo "-----> Downloading yq: ${YQ_DOWNLOAD_URL}"
-    if ! wget -nv "${YQ_DOWNLOAD_URL}" -O "${CACHE_DIR}/yq-${YQ_VERSION}.bin" 2>&1 | sed 's/^/       /'
+    if ! wget -nv "${YQ_DOWNLOAD_URL}" -O "${CACHE_DIR}/yq-${YQ_VERSION}.tar.gz" 2>&1 | sed 's/^/       /'
     then
         echo "ERROR> yq version ${YQ_VERSION} not found, URL=${YQ_DOWNLOAD_URL}"
         exit 1
