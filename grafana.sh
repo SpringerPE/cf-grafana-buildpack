@@ -15,7 +15,7 @@ export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_ORG_CONFIG="${ROOT}/app/orgs/orgs.yml"
 export GRAFANA_USER_CONFIG="${ROOT}/app/users/users.yml"
-export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:$YQ_ROOT
+export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
 ### Bindings
 # Prometheus datasource
