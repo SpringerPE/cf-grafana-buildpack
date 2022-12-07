@@ -14,7 +14,6 @@ export APP_ROOT="${ROOT}/app"
 export GRAFANA_DASHBOARD_ROOT=${APP_ROOT}/dashboards
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
-export GRAFANA_ORG_CONFIG_ROOT="${ROOT}/app/orgs"
 export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
@@ -459,27 +458,6 @@ set_homedashboard() {
 
 }
 
-set_orgs() {
-    if [[ -d "${GRAFANA_ORG_CONFIG_ROOT}" ]]
-    then
-        for org_config_file in "${GRAFANA_ORG_CONFIG_ROOT}/*.yml"
-        do
-            for org_name in $(yq eval '.orgs[].name' ${org_config_file})
-            do
-              echo "Create new Org ID - ${org_name}"
-              curl -s -H "Content-Type: application/json" \
-                   -u "${ADMIN_USER}:${ADMIN_PASS}" \
-                  -XPOST "http://127.0.0.1:${PORT}/api/orgs" \
-                  -d @- <<EOF
-{
-    "name":"${org_name}"
-}
-EOF
-            done
-        done
-    fi
-}
-
 set_users() {
     if [[ -d "${GRAFANA_USER_CONFIG_ROOT}" ]]
     then
@@ -541,7 +519,6 @@ configure_post_startup() {
     done
     if [[ ${status} -eq 200 ]]
     then
-        set_orgs
         set_users
         set_homedashboard
     else

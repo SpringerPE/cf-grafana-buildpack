@@ -38,7 +38,7 @@ applications:
   stack: cflinuxfs3
   random-route: true
   buildpacks:
-  - https://github.com/SpringerPE/cf-grafana-buildpack.git
+  - https://github.com/AssurityCloud/cf-grafana-buildpack.git
   env:
     ADMIN_USER: admin
     ADMIN_PASS: admin
@@ -49,7 +49,7 @@ and run from the root folder `cf push`
 
 Aditionally by binding the app to a SQL instance (mysql or postgres), 
 everything will be saved in a persistent DB, but this is not really 
-recommented unless you are testing or you want to become a good 
+recommended unless you are testing or you want to become a good 
 developer/devops (you know replicable builds, traceable changes, etc)
 
 
@@ -57,18 +57,18 @@ developer/devops (you know replicable builds, traceable changes, etc)
 
 To use this buildpack, specify the URI of this repository when push to Cloud Foundry.
 ```
-$ cf push <APP-NAME> -b https://github.com/SpringerPE/cf-grafana-buildpack.git
+$ cf push <APP-NAME> -b https://github.com/AssurityCloud/cf-grafana-buildpack.git
 ```
 
 If you want to deploy a specific version, have a look at the git tags available
 and put a `#` removing the `.git` extension like this:
 ```
-$ cf push <APP-NAME> -b https://github.com/SpringerPE/cf-grafana-buildpack#<TAG>
+$ cf push <APP-NAME> -b https://github.com/AssurityCloud/cf-grafana-buildpack#<TAG>
 ```
 
 For example:
 ```
-$ cf push <APP-NAME> -b https://github.com/SpringerPE/cf-grafana-buildpack#v1
+$ cf push <APP-NAME> -b https://github.com/AssurityCloud/cf-grafana-buildpack#v1
 ```
 
 or define it in the `manifest.yml`:
@@ -77,7 +77,7 @@ or define it in the `manifest.yml`:
 ---
 applications:
 - name: grafana
-  buildpack: https://github.com/SpringerPE/cf-grafana-buildpack#v1
+  buildpack: https://github.com/AssurityCloud/cf-grafana-buildpack#v1
 ```
 
 ### Configuration
@@ -99,8 +99,8 @@ Apart of the Grafana environment variables, you can define these ones:
 * **DEFAULT_DATASOURCE_EDITABLE** (default `false`). By default the auto-generated datasources for Prometheus and Alertmanager are not editable. Changing this value makes then editable, but if you do not use a DB be aware that changes on their properties will be lost after redeploy grafana.
 * **DEFAULT_DATASOURCE_TIMEINTERVAL** (default `60s`). Lowest interval/step value that should be used for default generated data source.
 * **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.
-* **ADMIN_USER**: main admin user (default is `admin`)
-* **ADMIN_PASS**: admin password (defautl is `admin`)
+* **ADMIN_USER**: main admin user (default is **GF_SECURITY_ADMIN_USER**, if set, otherwise `admin`)
+* **ADMIN_PASS**: admin password (default is **GF_SECURITY_ADMIN_PASSWORD**, if set, otherwise `admin`)
 * **SECRET_KEY**: Used for signing some datasource settings like secrets and passwords. Cannot be changed without requiring an update to datasource settings to re-encode them. Because this variable is so important, if it is not defined, **it defaults to the space uuid** where the app is running.
 * **DOMAIN**: uri of the application, defauls to the first route in CF.
 * **EMAIL**: when a smtp is configured this is the `from` field, defaults to `grafana@$DOMAIN`.
@@ -143,6 +143,44 @@ satellogic-3d-globe-panel 0.1.0
 As an alternative you can uncompress a plugin in a `plugins` folder or use locally `grafana-cli`
 specifiying `pluginsDir` to `plugins`: `grafana-cli --pluginsDir plugins plugins install <id> <version>`
 
+### User configuration
+
+This buildpack supports declarative user configuration, following a similar format to dashboard and
+datasource configuration. Note - this is a workaround until Grafana adds support for this feature. Grafana is
+launched, and the configuration is applied by API calls post launch. Thus, a failure to create a user will not
+cause the container to become unhealthy, the user will simply not be created.
+
+User configuration yml files are placed in the `users` directory of the app. The files have the following format:
+
+```users/*.yml
+users:
+  - name: "${MY_USER_NAME}"
+    login: "${MY_USER_LOGIN}"
+    password: "${MY_USER_PWD}"
+    email: "${MY_USER_EMAIL}"
+    orgId: 1
+    role: "${MY_USER_ROLE}"
+```
+
+### Dashboard pre-processing
+
+This buildpack supports changing dashboards before startup based on environment variables. This allows, for example,
+changing the title of a dashboard to show which environment it is running in, or changing link URLs per environment.
+At this point the only functionality supported is find and replace.
+
+Pre-processing configuration yml files are placed in the `dashboards/pre-process` directory of the app.
+The `dashboard_file_location` is relative to `dashboards` directory.
+
+```dashboards/pre-process/*.yml
+dashboard_file_location: my-dashboards/*
+
+replacements:
+- find: "prod.otherservice.com"
+  replace: ${OTHER_SERVICE_DOMAIN:-"prod.otherservice.com"}
+
+- find: "Production"
+  replace: ${ENVIRONMENT:-"Production"}
+```
 
 ### Service brokers
 
