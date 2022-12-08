@@ -9,11 +9,13 @@ export AUTH_ROOT="${ROOT}/auth"
 export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
+export YQ_ROOT=${YQ_ROOT}
 export APP_ROOT="${ROOT}/app"
+export GRAFANA_DASHBOARD_ROOT=${APP_ROOT}/dashboards
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
-export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
-export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
+export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
+export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
 ### Bindings
 # Prometheus datasource
@@ -26,8 +28,8 @@ export DOMAIN=${DOMAIN:-$(jq -r '.uris[0]' <<<"${VCAP_APPLICATION}")}
 export URL="${URL:-http://$DOMAIN/}"
 export HOME_DASHBOARD_UID="${HOME_DASHBOARD_UID:-home}"
 export HOME_ORG_ID="${HOME_ORG_ID:-1}"
-export ADMIN_USER="${ADMIN_USER:-admin}"
-export ADMIN_PASS="${ADMIN_PASS:-admin}"
+export ADMIN_USER="${ADMIN_USER:-${GF_SECURITY_ADMIN_USER:-admin}}"
+export ADMIN_PASS="${ADMIN_PASS:-${GF_SECURITY_ADMIN_PASSWORD:-admin}}"
 export EMAIL="${EMAIL:-grafana@$DOMAIN}"
 export SECRET_KEY="${SECRET_KEY:-}"
 export DEFAULT_DATASOURCE_EDITABLE="${DEFAULT_DATASOURCE_EDITABLE:-false}"
@@ -340,14 +342,32 @@ set_datasources() {
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	then
+	  if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+	  then
             set_vcap_datasource_alertmanager "${datasource}"
         fi
     fi
 }
 
+pre-process-dashboards() {
+    if [[ -d "${GRAFANA_DASHBOARD_ROOT}/pre-process" ]]
+    then
+        for pre_process_config_file in "${GRAFANA_DASHBOARD_ROOT}/pre-process/*.yml"
+        do
+            dashboard_file_location=$(yq eval '.dashboard_file_location' ${pre_process_config_file})
 
+            for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
+            do
+                find=$(eval "echo $(echo $replacement | jq '.find')")
+                replace=$(eval "echo $(echo $replacement | jq '.replace')")
+
+                echo "Finding $find in dashboards and replacing with $replace"
+                sed_command="s/$find/$replace/g"
+                sed -i -- $sed_command ${GRAFANA_DASHBOARD_ROOT}/${dashboard_file_location}
+            done
+        done
+    fi
+}
 
 set_seed_secrets() {
     if [[ -z "${SECRET_KEY}" ]]
@@ -414,6 +434,74 @@ run_grafana_server() {
 set_homedashboard() {
     local dashboard_httpcode=()
     local dashboard_id
+
+    readarray -t dashboard_httpcode <<<$(
+        curl -s -w "\n%{response_code}\n" \
+        -u "${ADMIN_USER}:${ADMIN_PASS}" \
+        "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
+    )
+    if [[ "${dashboard_httpcode[1]}" -eq 200 ]]
+    then
+        dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
+        output=$(curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                 -H 'Content-Type: application/json;charset=UTF-8' \
+                 -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
+                 --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
+                 "http://127.0.0.1:${PORT}/api/org/preferences")
+        echo "Defined default home dashboard id ${dashboard_id} for org ${HOME_ORG_ID}: ${output}"
+    elif [[ "${dashboard_httpcode[1]}" -eq 404 ]]
+    then
+        echo "No default home dashboard for org ${HOME_ORG_ID} has been found"
+    else
+        echo "Error setting default HOME dashboard: ${dashboard_httpcode[0]}"
+    fi
+
+}
+
+set_users() {
+    if [[ -d "${GRAFANA_USER_CONFIG_ROOT}" ]]
+    then
+        for user_config_file in "${GRAFANA_USER_CONFIG_ROOT}/*.yml"
+        do
+            for user in  $(yq eval -o=j -I=0 '.users[]' ${user_config_file})
+            do
+                name=$(eval "echo $(echo $user | jq '.name')")
+                login=$(eval "echo $(echo $user | jq '.login')")
+                password=$(eval "echo $(echo $user | jq '.password')")
+                email=$(eval "echo $(echo $user | jq '.email')")
+                orgId=$(eval "echo $(echo $user | jq '.orgId')")
+                role=$(eval "echo $(echo $user | jq '.role')")
+
+                echo "Add user - name: ${name}, login: ${login}, email: ${email}, orgId: ${orgId}"
+                curl -s -H "Content-Type: application/json" \
+                     -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                    -XPOST "http://127.0.0.1:${PORT}/api/admin/users" \
+                    -d @- <<EOF
+{
+    "name":"${name}",
+    "login":"${login}",
+    "password":"${password}",
+    "email":"${email}",
+    "orgId":${orgId}
+}
+EOF
+
+                echo "Associate user ${login} with org ${orgId} and role ${role}"
+                curl -s -H "Content-Type: application/json" \
+                     -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                    -XPOST "http://127.0.0.1:${PORT}/api/orgs/${orgId}/users" \
+                    -d @- <<EOF
+{
+    "loginOrEmail":"${login}",
+    "role":"${role}"
+}
+EOF
+            done
+        done
+    fi
+}
+
+configure_post_startup() {
     local counter=30
     local status=0
 
@@ -431,33 +519,16 @@ set_homedashboard() {
     done
     if [[ ${status} -eq 200 ]]
     then
-        readarray -t dashboard_httpcode <<<$(
-            curl -s -w "\n%{response_code}\n" \
-            -u "${ADMIN_USER}:${ADMIN_PASS}" \
-            "http://127.0.0.1:${PORT}/api/dashboards/uid/${HOME_DASHBOARD_UID}" \
-        )
-        if [[ "${dashboard_httpcode[1]}" -eq 200 ]]
-        then
-            dashboard_id=$(jq '.dashboard.id' <<<"${dashboard_httpcode[0]}")
-            output=$(curl -s -X PUT -u "${ADMIN_USER}:${ADMIN_PASS}" \
-                     -H 'Content-Type: application/json;charset=UTF-8' \
-                     -H "X-Grafana-Org-Id: ${HOME_ORG_ID}" \
-                     --data-binary "{\"homeDashboardId\": ${dashboard_id}}" \
-                     "http://127.0.0.1:${PORT}/api/org/preferences")
-            echo "Defined default home dashboard id ${dashboard_id} for org ${HOME_ORG_ID}: ${output}"
-        elif [[ "${dashboard_httpcode[1]}" -eq 404 ]]
-        then
-            echo "No default home dashboard for org ${HOME_ORG_ID} has been found"
-        else
-            echo "Error setting default HOME dashboard: ${dashboard_httpcode[0]}"
-        fi
+        set_users
+        set_homedashboard
     else
-        echo "Error setting querying preferences to set default dashboard: ${status}"
+        echo "Error setting querying preferences to determine grafana application startup: ${status}"
     fi
 }
 
 ################################################################################
 
+pre-process-dashboards
 set_sql_databases
 set_seed_secrets
 set_datasources
@@ -467,7 +538,7 @@ install_grafana_plugins
 run_sql_proxies
 run_grafana_server &
 # Set home dashboard only on the first instance
-[[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && set_homedashboard
+[[ "${CF_INSTANCE_INDEX:-0}" == "0" ]] && configure_post_startup
 # Go back to grafana_server and keep waiting, exit whit its exit code
 wait
 

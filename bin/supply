@@ -50,8 +50,20 @@ else
     echo "-----> Downloading cloudsql proxy: ${CLOUDSQL_PROXY_DOWNLOAD_URL}"
     if ! wget -nv "${CLOUDSQL_PROXY_DOWNLOAD_URL}" -O "${CACHE_DIR}/cloud_sql_proxy-${CLOUDSQL_PROXY_VERSION}.bin" 2>&1 | sed 's/^/       /'
     then
-        echo "ERROR> cloudsql proxy version ${GRAFANA_VERSION} not found, URL=${CLOUDSQL_PROXY_DOWNLOAD_URL}"
+        echo "ERROR> cloudsql proxy version ${CLOUDSQL_PROXY_VERSION} not found, URL=${CLOUDSQL_PROXY_DOWNLOAD_URL}"
         exit 1
     fi
 fi
 
+YQ_DOWNLOAD_URL="https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64.tar.gz"
+if [ -f "${CACHE_DIR}/yq-${YQ_VERSION}.tar.gz" ]
+then
+    echo "-----> Using yq ${YQ_VERSION} from cache"
+else
+    echo "-----> Downloading yq: ${YQ_DOWNLOAD_URL}"
+    if ! wget -nv "${YQ_DOWNLOAD_URL}" -O "${CACHE_DIR}/yq-${YQ_VERSION}.tar.gz" 2>&1 | sed 's/^/       /'
+    then
+        echo "ERROR> yq version ${YQ_VERSION} not found, URL=${YQ_DOWNLOAD_URL}"
+        exit 1
+    fi
+fi
