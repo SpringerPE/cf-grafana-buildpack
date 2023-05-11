@@ -12,6 +12,7 @@ export SQLPROXY_ROOT=$SQLPROXY_ROOT
 export YQ_ROOT=${YQ_ROOT}
 export APP_ROOT="${ROOT}/app"
 export GRAFANA_DASHBOARD_ROOT=${APP_ROOT}/dashboards
+export GRAFANA_ALERTING_ROOT=${APP_ROOT}/alerting
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
@@ -349,24 +350,25 @@ set_datasources() {
     fi
 }
 
-pre-process-dashboards() {
-    if [[ -d "${GRAFANA_DASHBOARD_ROOT}/pre-process" ]]
-    then
-        for pre_process_config_file in "${GRAFANA_DASHBOARD_ROOT}/pre-process/*.yml"
-        do
-            dashboard_file_location=$(yq eval '.dashboard_file_location' ${pre_process_config_file})
+pre-process() {
+  local root_dir="${1}"
+  if [[ -d "${root_dir}/pre-process" ]]
+  then
+      for pre_process_config_file in "${root_dir}/pre-process/*.yml"
+      do
+          files_to_process=$(yq eval '.files_to_process' ${pre_process_config_file})
 
-            for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
-            do
-                find=$(eval "echo $(echo $replacement | jq '.find')")
-                replace=$(eval "echo $(echo $replacement | jq '.replace')")
+          for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
+          do
+              find=$(eval "echo $(echo $replacement | jq '.find')")
+              replace=$(eval "echo $(echo $replacement | jq '.replace')")
 
-                echo "Finding $find in dashboards and replacing with $replace"
-                sed_command="s/$find/$replace/g"
-                sed -i -- $sed_command ${GRAFANA_DASHBOARD_ROOT}/${dashboard_file_location}
-            done
-        done
-    fi
+              echo "Finding $find in ${root_dir}/${files_to_process} and replacing with $replace"
+              sed_command="s/$find/$replace/g"
+              sed -i -- $sed_command ${root_dir}/${files_to_process}
+          done
+      done
+  fi
 }
 
 set_seed_secrets() {
@@ -383,7 +385,6 @@ set_seed_secrets() {
         echo "######################################################################"
     fi
 }
-
 
 install_grafana_plugins() {
     echo "Initializing plugins from ${GRAFANA_CFG_PLUGINS} ..."
@@ -528,7 +529,8 @@ configure_post_startup() {
 
 ################################################################################
 
-pre-process-dashboards
+pre-process ${GRAFANA_DASHBOARD_ROOT}
+pre-process ${GRAFANA_ALERTING_ROOT}
 set_sql_databases
 set_seed_secrets
 set_datasources
