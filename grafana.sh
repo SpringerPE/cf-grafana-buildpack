@@ -356,7 +356,7 @@ replace_token_with_data() {
   data_file=$3
   files_to_change=$4
 
-  replace_commands=$(cat ${data_file} | tail -n +2 | awk -F "," "{ print \"s/\\{${token}}/\" \$${data_pos} \"/g\"}")
+  replace_commands=$(cat ${data_file} | tail -n +2 | awk -F "," "{ print \"s/{${token}}/\" \$${data_pos} \"/g\"}")
 
   replace_command_array=($replace_commands)
   filename_array=($files_to_change)
