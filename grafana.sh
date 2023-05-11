@@ -395,9 +395,10 @@ merge_alert_template_files() {
   base_file=$1
   for filename in $2; do
     cat "$filename" >> "$base_file"
-    rm "$filename" || true
-    rm "${filename}--" || true
+    rm "$filename"
+    if [[ -f "${filename}--" ]]; then rm "${filename}--"; fi
   done
+  cat "$base_file"
 }
 
 generate_alerts_from_templates() {
