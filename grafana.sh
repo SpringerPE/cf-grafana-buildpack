@@ -395,8 +395,8 @@ merge_alert_template_files() {
   base_file=$1
   for filename in $2; do
     cat "$filename" >> "$base_file"
-    rm "$filename"
-    rm "${filename}--"
+    rm "$filename" || true
+    rm "${filename}--" || true
   done
 }
 
