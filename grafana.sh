@@ -399,14 +399,13 @@ merge_alert_template_files() {
     rm "$filename"
     if [[ -f "${filename}--" ]]; then rm "${filename}--"; fi
   done
-  cat "$base_file"
 }
 
 generate_alerts_from_templates() {
   template_dir=${GRAFANA_ALERTING_ROOT}/templates
   if [[ -d ${template_dir} ]]; then
 
-    alert_groups_filename=${GRAFANA_ALERTING_ROOT}/alert-groups.yml
+    alert_groups_filename=${template_dir}/alert-groups.yml
     cat > ${alert_groups_filename} << EOF
 apiVersion: 1
 
