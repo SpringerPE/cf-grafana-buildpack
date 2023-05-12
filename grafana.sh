@@ -36,7 +36,7 @@ export SECRET_KEY="${SECRET_KEY:-}"
 export DEFAULT_DATASOURCE_EDITABLE="${DEFAULT_DATASOURCE_EDITABLE:-false}"
 export DEFAULT_DATASOURCE_TIMEINTERVAL="${DEFAULT_DATASOURCE_TIMEINTERVAL:-60s}"
 
-# Variables exported, they are automatically filled from the 
+# Variables exported, they are automatically filled from the
 # service broker instances.
 # See reset_DB for default values!
 export DB_TYPE="sqlite3"
@@ -394,6 +394,7 @@ replace_placeholders_with_spaces() {
 merge_alert_template_files() {
   base_file=$1
   for filename in $2; do
+    echo '' >> "$base_file"
     cat "$filename" >> "$base_file"
     rm "$filename"
     if [[ -f "${filename}--" ]]; then rm "${filename}--"; fi
