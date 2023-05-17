@@ -636,6 +636,7 @@ personalise_public_config() {
 
 ################################################################################
 
+personalise_public_config
 generate_alerts_from_templates
 pre-process ${GRAFANA_DASHBOARD_ROOT}
 pre-process ${GRAFANA_ALERTING_ROOT}
