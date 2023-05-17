@@ -628,6 +628,12 @@ configure_post_startup() {
     fi
 }
 
+personalise_public_config() {
+  if [[ -d ${APP_ROOT}/public ]]; then
+    cp -r ${APP_ROOT}/public ${GRAFANA_ROOT}
+  fi
+}
+
 ################################################################################
 
 generate_alerts_from_templates
