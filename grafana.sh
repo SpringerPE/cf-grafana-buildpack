@@ -108,6 +108,9 @@ get_db_vcap_service_type() {
     jq -r '.credentials.uri | split(":")[0]' <<<"${db}"
 }
 
+get_influxdb_vcap_service() {
+    jq '[.[][] | select(.label=="csb-aws-influxdb") ] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
+}
 
 get_prometheus_vcap_service() {
     # search for a sql service looking at the label
@@ -247,6 +250,35 @@ set_sql_databases() {
     fi
 }
 
+set_vcap_datasource_influxdb() {
+  local datasource="${1}"
+
+  local name=$(jq -r '.name' <<<"${datasource}")
+  local database=$(jq -r '.credentials.database' <<<"${datasource}")
+  local url=$(jq -r '.credentials.url' <<<"${datasource}")
+  local user=$(jq -r '.credentials.username' <<<"${datasource}")
+  local password=$(jq -r '.credentials.password' <<<"${datasource}")
+
+  # Be careful, this is a HERE doc with tabs indentation!!
+  cat <<-EOF > "${APP_ROOT}/datasources/${name}.yml"
+apiVersion: 1
+
+deleteDatasources:
+- name: ${name}
+  orgId: 1
+
+datasources:
+- name: ${name}
+  type: influxdb
+  access: proxy
+  url: ${url}
+  database: ${database}
+  user: ${user}
+  orgId: 1
+  secureJsonData:
+    password: ${password}
+EOF
+}
 
 set_vcap_datasource_prometheus() {
     local datasource="${1}"
@@ -334,19 +366,26 @@ set_datasources() {
     local alertmanager_prometheus_exists
 
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
-    [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
+    if [[ -z "${datasource}" ]]; then
+      datasource=$(get_prometheus_vcap_service)
 
-    if [[ -n "${datasource}" ]]
-    then
+      if [[ -n "${datasource}" ]]; then
         set_vcap_datasource_prometheus "${datasource}"
 
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	  if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	  then
+	      if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+	      then
             set_vcap_datasource_alertmanager "${datasource}"
         fi
+      else
+        datasource=$(get_influxdb_vcap_service)
+
+        if [[ -n "${datasource}" ]]; then
+          set_vcap_datasource_influxdb "${datasource}"
+        fi
+      fi
     fi
 }
 
