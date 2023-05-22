@@ -399,7 +399,7 @@ set_datasources() {
         echo "Retrieving binding service for ${datasource_binding}"
         datasource=$(get_binding_service "${datasource_binding}")
         echo "${datasource}"
-        set_datasource ${datasource}
+        set_datasource "${datasource}"
       done
     fi
 }
