@@ -252,12 +252,15 @@ set_sql_databases() {
 
 set_vcap_datasource_influxdb() {
   local datasource="${1}"
+  echo "Setting influxdb datasource ${datasource}"
 
   local name=$(jq -r '.name' <<<"${datasource}")
   local database=$(jq -r '.credentials.database' <<<"${datasource}")
   local url=$(jq -r '.credentials.url' <<<"${datasource}")
   local user=$(jq -r '.credentials.username' <<<"${datasource}")
   local password=$(jq -r '.credentials.password' <<<"${datasource}")
+
+  mkdir -p "${APP_ROOT}/datasources"
 
   # Be careful, this is a HERE doc with tabs indentation!!
   cat <<-EOF > "${APP_ROOT}/datasources/${name}.yml"
@@ -366,6 +369,7 @@ set_datasources() {
     local alertmanager_prometheus_exists
 
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
+    echo "datasource=${datasource}"
     if [[ -z "${datasource}" ]]; then
       datasource=$(get_prometheus_vcap_service)
 
