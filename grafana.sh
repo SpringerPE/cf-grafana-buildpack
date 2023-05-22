@@ -389,6 +389,7 @@ set_datasource() {
 }
 
 set_datasources() {
+  local datasource
     if [[ -z ${DATASOURCE_BINDING_NAMES} ]]; then
       echo "No datasource binding names set, looking for prometheus or influxdb config"
       set_datasource $(get_prometheus_vcap_service)
@@ -396,7 +397,9 @@ set_datasources() {
     else
       for datasource_binding in ${DATASOURCE_BINDING_NAMES//,/ }; do
         echo "Retrieving binding service for ${datasource_binding}"
-        set_datasource $(get_binding_service "${datasource_binding}")
+        datasource=$(get_binding_service "${datasource_binding}")
+        echo "${datasource}"
+        set_datasource ${datasource}
       done
     fi
 }
