@@ -369,7 +369,7 @@ set_vcap_datasource_alertmanager() {
 }
 
 set_datasource() {
-  datasource=${1}
+  datasource="${1}"
   local alertmanager_prometheus_exists
 
   if [[ -n "${datasource}" ]]; then
