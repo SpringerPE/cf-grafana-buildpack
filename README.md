@@ -96,6 +96,7 @@ This buildpack is highly flexible, these are some keypoints to match the officia
 
 Apart from the Grafana environment variables, you can define these ones:
 
+* **DATASOURCE_BINDING_NAMES** (default empty). A comma separated list of datasources to be bound to the Grafana instance. Supports Prometheus and InfluxDB. If this is empty then whichever Prometheus or InfluxDB datasource can be found will be bound.
 * **DEFAULT_DATASOURCE_EDITABLE** (default `false`). By default the auto-generated datasources for Prometheus and Alertmanager are not editable. Changing this value makes then editable, but if you do not use a DB be aware that changes on their properties will be lost after redeploy grafana.
 * **DEFAULT_DATASOURCE_TIMEINTERVAL** (default `60s`). Lowest interval/step value that should be used for default generated data source.
 * **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.

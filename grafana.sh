@@ -19,8 +19,8 @@ export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
 ### Bindings
-# Prometheus datasource
-export DATASOURCE_BINDING_NAME="${DATASOURCE_BINDING_NAME:-datasource}"
+# Prometheus or InfluxDB datasources
+export DATASOURCE_BINDING_NAMES="${DATASOURCE_BINDING_NAMES}"
 # SQL DB
 export DB_BINDING_NAME="${DB_BINDING_NAME:-}"
 
@@ -368,27 +368,35 @@ set_vcap_datasource_alertmanager() {
     grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}
 }
 
+set_datasource() {
+  datasource=${1}
+  local alertmanager_prometheus_exists
+
+  if [[ -n "${datasource}" ]]; then
+    echo "Setting datasource ${datasource}"
+
+    set_vcap_datasource_prometheus "${datasource}"
+    set_vcap_datasource_influxdb "${datasource}"
+
+    # Check if AlertManager for the Prometheus service instance has been enabled by the user first
+    # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
+    alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+    if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+    then
+        set_vcap_datasource_alertmanager "${datasource}"
+    fi
+  fi
+}
+
 set_datasources() {
-    local datasource
-    local alertmanager_prometheus_exists
 
-    datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
-
-    [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
-    [[ -z "${datasource}" ]] && datasource=$(get_influxdb_vcap_service)
-    echo "datasource=${datasource}"
-
-    if [[ -n "${datasource}" ]]; then
-      set_vcap_datasource_prometheus "${datasource}"
-      set_vcap_datasource_influxdb "${datasource}"
-
-      # Check if AlertManager for the Prometheus service instance has been enabled by the user first
-      # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
-      alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-      if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-      then
-          set_vcap_datasource_alertmanager "${datasource}"
-      fi
+    if [[ -z ${DATASOURCE_BINDING_NAMES} ]]; then
+      set_datasource $(get_prometheus_vcap_service)
+      set_datasource $(get_influxdb_vcap_service)
+    else
+      for datasource_binding in ${DATASOURCE_BINDING_NAMES//,/ }; do
+        set_datasource $(get_binding_service "${datasource_binding}")
+      done
     fi
 }
 
