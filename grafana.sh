@@ -252,18 +252,19 @@ set_sql_databases() {
 
 set_vcap_datasource_influxdb() {
   local datasource="${1}"
-  echo "Setting influxdb datasource ${datasource}"
 
-  local name=$(jq -r '.name' <<<"${datasource}")
-  local database=$(jq -r '.credentials.database' <<<"${datasource}")
-  local url=$(jq -r '.credentials.url' <<<"${datasource}")
-  local user=$(jq -r '.credentials.username' <<<"${datasource}")
-  local password=$(jq -r '.credentials.password' <<<"${datasource}")
+  local label=$(jq -r '.label' <<<"${datasource}")
+  if [[ label = 'csb-aws-influxdb' ]]; then
+    local name=$(jq -r '.name' <<<"${datasource}")
+    local database=$(jq -r '.credentials.database' <<<"${datasource}")
+    local url=$(jq -r '.credentials.url' <<<"${datasource}")
+    local user=$(jq -r '.credentials.username' <<<"${datasource}")
+    local password=$(jq -r '.credentials.password' <<<"${datasource}")
 
-  mkdir -p "${APP_ROOT}/datasources"
+    mkdir -p "${APP_ROOT}/datasources"
 
-  # Be careful, this is a HERE doc with tabs indentation!!
-  cat <<-EOF > "${APP_ROOT}/datasources/${name}.yml"
+    # Be careful, this is a HERE doc with tabs indentation!!
+    cat <<-EOF > "${APP_ROOT}/datasources/${name}.yml"
 apiVersion: 1
 
 deleteDatasources:
@@ -281,12 +282,14 @@ datasources:
   secureJsonData:
     password: ${password}
 EOF
+  fi
 }
 
 set_vcap_datasource_prometheus() {
-    local datasource="${1}"
+  local datasource="${1}"
 
-    local label=$(jq -r '.label' <<<"${datasource}")
+  local label=$(jq -r '.label' <<<"${datasource}")
+  if [[ label != 'csb-aws-influxdb' ]]; then
     local name=$(jq -r '.name' <<<"${datasource}")
     local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
     local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
@@ -323,6 +326,7 @@ set_vcap_datasource_prometheus() {
 	  isDefault: true
 	  editable: ${DEFAULT_DATASOURCE_EDITABLE}
 	EOF
+	fi
 }
 
 
@@ -369,26 +373,21 @@ set_datasources() {
     local alertmanager_prometheus_exists
 
     datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
+
+    [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
+    [[ -z "${datasource}" ]] && datasource=$(get_influxdb_vcap_service)
     echo "datasource=${datasource}"
-    if [[ -z "${datasource}" ]]; then
-      datasource=$(get_prometheus_vcap_service)
 
-      if [[ -n "${datasource}" ]]; then
-        set_vcap_datasource_prometheus "${datasource}"
+    if [[ -n "${datasource}" ]]; then
+      set_vcap_datasource_prometheus "${datasource}"
+      set_vcap_datasource_influxdb "${datasource}"
 
-        # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
-        # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
-        alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	      if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	      then
-            set_vcap_datasource_alertmanager "${datasource}"
-        fi
-      else
-        datasource=$(get_influxdb_vcap_service)
-
-        if [[ -n "${datasource}" ]]; then
-          set_vcap_datasource_influxdb "${datasource}"
-        fi
+      # Check if AlertManager for the Prometheus service instance has been enabled by the user first
+      # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
+      alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+      if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+      then
+          set_vcap_datasource_alertmanager "${datasource}"
       fi
     fi
 }
