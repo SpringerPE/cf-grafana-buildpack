@@ -255,6 +255,8 @@ set_vcap_datasource_influxdb() {
 
   local label=$(jq -r '.label' <<<"${datasource}")
   if [[ label = 'csb-aws-influxdb' ]]; then
+
+    echo "Provisioning InfluxDB datasource: ${label}"
     local name=$(jq -r '.name' <<<"${datasource}")
     local database=$(jq -r '.credentials.database' <<<"${datasource}")
     local url=$(jq -r '.credentials.url' <<<"${datasource}")
@@ -290,6 +292,9 @@ set_vcap_datasource_prometheus() {
 
   local label=$(jq -r '.label' <<<"${datasource}")
   if [[ label != 'csb-aws-influxdb' ]]; then
+
+    echo "Provisioning Prometheus datasource: ${label}"
+
     local name=$(jq -r '.name' <<<"${datasource}")
     local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
     local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
