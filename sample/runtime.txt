@@ -1,2 +1,2 @@
 # Define your grafana version here
-9.2.4
+9.3.1
