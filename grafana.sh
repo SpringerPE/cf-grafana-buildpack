@@ -504,7 +504,7 @@ EOF
     fi
 }
 
-pre-process() {
+pre_process() {
   local root_dir="${1}"
   if [[ -d "${root_dir}/pre-process" ]]
   then
@@ -691,8 +691,8 @@ personalise_public_config() {
 
 personalise_public_config
 generate_alerts_from_templates
-pre-process ${GRAFANA_DASHBOARD_ROOT}
-pre-process ${GRAFANA_ALERTING_ROOT}
+pre_process ${GRAFANA_DASHBOARD_ROOT}
+pre_process ${GRAFANA_ALERTING_ROOT}
 set_sql_databases
 set_seed_secrets
 set_datasources
