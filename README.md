@@ -47,7 +47,7 @@ applications:
 
 and run from the root folder `cf push`
 
-Aditionally by binding the app to a SQL instance (mysql or postgres), 
+Additionally by binding the app to a SQL instance (mysql or postgres), 
 everything will be saved in a persistent DB, but this is not really 
 recommended unless you are testing or you want to become a good 
 developer/devops (you know replicable builds, traceable changes, etc)
@@ -87,15 +87,16 @@ First have a look at the official documentation of Grafana: http://docs.grafana.
 This buildpack is highly flexible, these are some keypoints to match the official documentation with this buildpack implementation.
 
 * The app folder is the `provisioning` folder [specified in the documentation](https://grafana.com/docs/grafana/latest/administration/provisioning/), so you can create these directories: `datasources`, `dashboards`, `notifiers` there as the official documenation says.
-* The default configuration refereed as `defaults.ini` is provided and customized for the buildpack: https://github.com/SpringerPE/cf-grafana-buildpack/blob/master/defaults.ini
+* The default configuration referred as `defaults.ini` is provided and customized for the buildpack: https://github.com/SpringerPE/cf-grafana-buildpack/blob/master/defaults.ini
 * The custom configuration file referred as `custom.ini` will be applied automatically by placing a file named `grafana.ini` in the root folder of the app, so `custom.ini` is called `grafana.ini`.
 * You can use all environment variables to setup Grafana (`GF_*`), except the ones in the `[paths]` section of the configuration file.
 * Plugins folder points to `plugins` in the root app, so all plugins will be installed there automatically.
 
 #### Important environment variables
 
-Apart of the Grafana environment variables, you can define these ones:
+Apart from the Grafana environment variables, you can define these ones:
 
+* **DATASOURCE_BINDING_NAMES** (default empty). A comma separated list of datasources to be bound to the Grafana instance. Supports Prometheus and InfluxDB. If this is empty then whichever Prometheus or InfluxDB datasource can be found will be bound.
 * **DEFAULT_DATASOURCE_EDITABLE** (default `false`). By default the auto-generated datasources for Prometheus and Alertmanager are not editable. Changing this value makes then editable, but if you do not use a DB be aware that changes on their properties will be lost after redeploy grafana.
 * **DEFAULT_DATASOURCE_TIMEINTERVAL** (default `60s`). Lowest interval/step value that should be used for default generated data source.
 * **HOME_DASHBOARD_UID** (default `home`). Used to setup automatically the Grafana home dashboard (the one users see automatically when they log in). If you provision a dashboard with `uid`  equal to `HOME_DASHBOARD_UID`, the buildpack will setup such dashboard as home. The `uid` is part of the url of each dashboard, and it can be defined to a string like `home` (by default is a random generated string) to give some meaning to the dashboard urls. More info: https://grafana.com/docs/http_api/dashboard/#identifier-id-vs-unique-identifier-uid.
@@ -104,7 +105,7 @@ Apart of the Grafana environment variables, you can define these ones:
 * **SECRET_KEY**: Used for signing some datasource settings like secrets and passwords. Cannot be changed without requiring an update to datasource settings to re-encode them. Because this variable is so important, if it is not defined, **it defaults to the space uuid** where the app is running.
 * **DOMAIN**: uri of the application, defauls to the first route in CF.
 * **EMAIL**: when a smtp is configured this is the `from` field, defaults to `grafana@$DOMAIN`.
-* **DB_BINDING_NAME**: name of the binding with a service instance to use as SQL database. By default is empty, so the builpack will search for bindings providing a DB connection string in their `credentials.uri` field. If it is defined it will skip automatic search and focus only on the provided one.
+* **DB_BINDING_NAME**: name of the binding with a service instance to use as SQL database. By default is empty, so the buildpack will search for bindings providing a DB connection string in their `credentials.uri` field. If it is defined it will skip automatic search and focus only on the provided one.
 * **URL**: URL of the app, defaults to `http://$DOMAIN`. If using https you will need to redefine this variable (specially for Oauth integrations!).
 
 For production use, define a proper `ADMIN_PASS` and `SECRET_KEY`. The rest of variables should
@@ -162,17 +163,17 @@ users:
     role: "${MY_USER_ROLE}"
 ```
 
-### Dashboard pre-processing
+### Dashboard and alerting pre-processing
 
-This buildpack supports changing dashboards before startup based on environment variables. This allows, for example,
-changing the title of a dashboard to show which environment it is running in, or changing link URLs per environment.
-At this point the only functionality supported is find and replace.
+This buildpack supports changing dashboards and alerts before startup based on environment variables. This allows, for 
+example, changing the title of a dashboard to show which environment it is running in, or changing link URLs per 
+environment. At this point the only functionality supported is find and replace.
 
-Pre-processing configuration yml files are placed in the `dashboards/pre-process` directory of the app.
-The `dashboard_file_location` is relative to `dashboards` directory.
+Pre-processing configuration yml files are placed in the `dashboards/pre-process` and `alerting/pre-process`directories 
+of the app. The `files_to_process` is relative to the `dashboards` or `alerting` directory.
 
 ```dashboards/pre-process/*.yml
-dashboard_file_location: my-dashboards/*
+files_to_process: my-dashboards/*.json
 
 replacements:
 - find: "prod.otherservice.com"

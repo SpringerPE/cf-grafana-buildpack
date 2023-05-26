@@ -12,14 +12,15 @@ export SQLPROXY_ROOT=$SQLPROXY_ROOT
 export YQ_ROOT=${YQ_ROOT}
 export APP_ROOT="${ROOT}/app"
 export GRAFANA_DASHBOARD_ROOT=${APP_ROOT}/dashboards
+export GRAFANA_ALERTING_ROOT=${APP_ROOT}/alerting
 export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_USER_CONFIG_ROOT="${ROOT}/app/users"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}:${YQ_ROOT}
 
 ### Bindings
-# Prometheus datasource
-export DATASOURCE_BINDING_NAME="${DATASOURCE_BINDING_NAME:-datasource}"
+# Prometheus or InfluxDB datasources
+export DATASOURCE_BINDING_NAMES="${DATASOURCE_BINDING_NAMES:-}"
 # SQL DB
 export DB_BINDING_NAME="${DB_BINDING_NAME:-}"
 
@@ -35,7 +36,7 @@ export SECRET_KEY="${SECRET_KEY:-}"
 export DEFAULT_DATASOURCE_EDITABLE="${DEFAULT_DATASOURCE_EDITABLE:-false}"
 export DEFAULT_DATASOURCE_TIMEINTERVAL="${DEFAULT_DATASOURCE_TIMEINTERVAL:-60s}"
 
-# Variables exported, they are automatically filled from the 
+# Variables exported, they are automatically filled from the
 # service broker instances.
 # See reset_DB for default values!
 export DB_TYPE="sqlite3"
@@ -107,6 +108,9 @@ get_db_vcap_service_type() {
     jq -r '.credentials.uri | split(":")[0]' <<<"${db}"
 }
 
+get_influxdb_vcap_service() {
+    jq '[.[][] | select(.label=="csb-aws-influxdb") ] | first | select (.!=null)' <<<"${VCAP_SERVICES}"
+}
 
 get_prometheus_vcap_service() {
     # search for a sql service looking at the label
@@ -246,11 +250,48 @@ set_sql_databases() {
     fi
 }
 
+set_vcap_datasource_influxdb() {
+  local datasource="${1}"
+
+  local label=$(jq -r '.label' <<<"${datasource}")
+  if [[ "${label}" = "csb-aws-influxdb" ]]; then
+
+    local name=$(jq -r '.name' <<<"${datasource}")
+    local database=$(jq -r '.credentials.database' <<<"${datasource}")
+    local url=$(jq -r '.credentials.url' <<<"${datasource}")
+    local user=$(jq -r '.credentials.username' <<<"${datasource}")
+    local password=$(jq -r '.credentials.password' <<<"${datasource}")
+
+    mkdir -p "${APP_ROOT}/datasources"
+
+    # Be careful, this is a HERE doc with tabs indentation!!
+    cat <<-EOF > "${APP_ROOT}/datasources/${name}.yml"
+apiVersion: 1
+
+deleteDatasources:
+- name: ${name}
+  orgId: 1
+
+datasources:
+- name: ${name}
+  type: influxdb
+  access: proxy
+  url: ${url}
+  database: ${database}
+  user: ${user}
+  orgId: 1
+  secureJsonData:
+    password: ${password}
+EOF
+  fi
+}
 
 set_vcap_datasource_prometheus() {
-    local datasource="${1}"
+  local datasource="${1}"
 
-    local label=$(jq -r '.label' <<<"${datasource}")
+  local label=$(jq -r '.label' <<<"${datasource}")
+  if [[ "${label}" != "csb-aws-influxdb" ]]; then
+
     local name=$(jq -r '.name' <<<"${datasource}")
     local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
     local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
@@ -287,6 +328,7 @@ set_vcap_datasource_prometheus() {
 	  isDefault: true
 	  editable: ${DEFAULT_DATASOURCE_EDITABLE}
 	EOF
+	fi
 }
 
 
@@ -328,45 +370,159 @@ set_vcap_datasource_alertmanager() {
     grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}
 }
 
-set_datasources() {
-    local datasource
-    local alertmanager_prometheus_exists
+set_datasource() {
+  datasource="${1}"
+  local alertmanager_prometheus_exists
 
-    datasource=$(get_binding_service "${DATASOURCE_BINDING_NAME}")
-    [[ -z "${datasource}" ]] && datasource=$(get_prometheus_vcap_service)
+  if [[ -n "${datasource}" ]]; then
+    echo "Setting datasource ${datasource}"
 
-    if [[ -n "${datasource}" ]]
+    set_vcap_datasource_prometheus "${datasource}"
+    set_vcap_datasource_influxdb "${datasource}"
+
+    # Check if AlertManager for the Prometheus service instance has been enabled by the user first
+    # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
+    alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
+    if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
     then
-        set_vcap_datasource_prometheus "${datasource}"
+        set_vcap_datasource_alertmanager "${datasource}"
+    fi
+  fi
+}
 
-        # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
-        # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
-        alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	  if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	  then
-            set_vcap_datasource_alertmanager "${datasource}"
-        fi
+set_datasources() {
+  if [[ -z ${DATASOURCE_BINDING_NAMES} ]]; then
+    echo "No datasource binding names set, looking for prometheus or influxdb config"
+    set_datasource "$(get_prometheus_vcap_service)"
+    set_datasource "$(get_influxdb_vcap_service)"
+  else
+    for datasource_binding in ${DATASOURCE_BINDING_NAMES//,/ }; do
+      echo "Retrieving binding service for ${datasource_binding}"
+      set_datasource "$(get_binding_service "${datasource_binding}")"
+    done
+  fi
+}
+
+replace_token_with_data() {
+  token=$1
+  data_pos=$2
+  data_file=$3
+  files_to_change=$4
+
+  replace_commands=$(cat ${data_file} | tail -n +2 | awk -F "," "{ print \"s/{${token}}/\" \$${data_pos} \"/g\"}")
+
+  replace_command_array=($replace_commands)
+  filename_array=($files_to_change)
+  filename_length=${#filename_array[@]}
+
+  for (( pos=0; pos<filename_length; pos++ )); do
+    filename="${filename_array[$pos]}"
+    replace_command="${replace_command_array[$pos]}"
+    echo "replace_command=${replace_command}, filename=${filename}"
+    sed -i -- "${replace_command}" "${filename}"
+  done
+}
+
+replace_headers_with_data() {
+  data_file=$1
+  files_to_change=$2
+
+  headers=$(head -n 1 ${data_file})
+  IFS=$','; header_array=($headers); unset IFS;
+  header_length=${#header_array[@]}
+
+  for (( header_pos=0; header_pos<header_length; header_pos++ )); do
+    header="${header_array[$header_pos]}"
+    echo "header=${header}"
+    replace_token_with_data "${header}" $((header_pos + 1)) "${data_file}" "${files_to_change}"
+  done
+}
+
+replace_placeholders_with_spaces() {
+  for filename in $1; do
+    sed -i -- 's/+/ /g' "${filename}"
+  done
+}
+
+merge_alert_template_files() {
+  base_file=$1
+  for filename in $2; do
+    echo '' >> "$base_file"
+    cat "$filename" >> "$base_file"
+    rm "$filename"
+    if [[ -f "${filename}--" ]]; then rm "${filename}--"; fi
+  done
+}
+
+generate_alerts_from_templates() {
+  template_dir=${GRAFANA_ALERTING_ROOT}/templates
+  if [[ -d ${template_dir} ]]; then
+
+    alert_groups_filename=${GRAFANA_ALERTING_ROOT}/alert-groups.yml
+    cat > ${alert_groups_filename} << EOF
+apiVersion: 1
+
+groups:
+EOF
+
+    pushd "${template_dir}"
+
+      for subdirectory in */; do
+
+        pushd "${subdirectory}"
+
+          if [ -f "group.yml.template" ]; then
+            cat "group.yml.template" >> ${alert_groups_filename}
+          fi
+
+          for template in rule-*.yml.template; do
+
+            alert_name="${template%.yml.template}"
+            alert_data_file="${alert_name}.csv"
+
+            if [ -f "$alert_data_file" ]; then
+              echo "creating alerts from template ${template} with data from ${alert_data_file}"
+
+              filenames=$(cat ${alert_data_file} | tail -n +2 | awk -F "," "{ print \"${GRAFANA_ALERTING_ROOT}/\" \$1 \"-${alert_name}.yml\" }")
+              for filename in $filenames; do
+                echo "creating alert file ${filename}"
+                cp "${template}" "${filename}"
+              done
+
+              replace_headers_with_data "${alert_data_file}" "${filenames}"
+              replace_placeholders_with_spaces "${filenames}"
+              merge_alert_template_files "${alert_groups_filename}" "${filenames}"
+
+            fi
+
+          done
+        popd
+      done
+
+    popd
+
     fi
 }
 
-pre-process-dashboards() {
-    if [[ -d "${GRAFANA_DASHBOARD_ROOT}/pre-process" ]]
-    then
-        for pre_process_config_file in "${GRAFANA_DASHBOARD_ROOT}/pre-process/*.yml"
-        do
-            dashboard_file_location=$(yq eval '.dashboard_file_location' ${pre_process_config_file})
+pre_process() {
+  local root_dir="${1}"
+  if [[ -d "${root_dir}/pre-process" ]]
+  then
+      for pre_process_config_file in "${root_dir}/pre-process/*.yml"
+      do
+          files_to_process=$(yq eval '.files_to_process' ${pre_process_config_file})
 
-            for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
-            do
-                find=$(eval "echo $(echo $replacement | jq '.find')")
-                replace=$(eval "echo $(echo $replacement | jq '.replace')")
+          for replacement in $(yq eval -o=j -I=0 '.replacements[]' ${pre_process_config_file})
+          do
+              find=$(eval "echo $(echo $replacement | jq '.find')")
+              replace=$(eval "echo $(echo $replacement | jq '.replace')")
 
-                echo "Finding $find in dashboards and replacing with $replace"
-                sed_command="s/$find/$replace/g"
-                sed -i -- $sed_command ${GRAFANA_DASHBOARD_ROOT}/${dashboard_file_location}
-            done
-        done
-    fi
+              echo "Finding $find in ${root_dir}/${files_to_process} and replacing with $replace"
+              sed_command="s/$find/$replace/g"
+              sed -i -- $sed_command ${root_dir}/${files_to_process}
+          done
+      done
+  fi
 }
 
 set_seed_secrets() {
@@ -383,7 +539,6 @@ set_seed_secrets() {
         echo "######################################################################"
     fi
 }
-
 
 install_grafana_plugins() {
     echo "Initializing plugins from ${GRAFANA_CFG_PLUGINS} ..."
@@ -526,9 +681,18 @@ configure_post_startup() {
     fi
 }
 
+personalise_public_config() {
+  if [[ -d ${APP_ROOT}/public ]]; then
+    cp -r ${APP_ROOT}/public ${GRAFANA_ROOT}
+  fi
+}
+
 ################################################################################
 
-pre-process-dashboards
+personalise_public_config
+generate_alerts_from_templates
+pre_process ${GRAFANA_DASHBOARD_ROOT}
+pre_process ${GRAFANA_ALERTING_ROOT}
 set_sql_databases
 set_seed_secrets
 set_datasources
