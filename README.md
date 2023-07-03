@@ -194,7 +194,7 @@ applications:
 - name: mission-control
   memory: 512M
   instances: 1
-  stack: cflinuxfs3
+  stack: cflinuxfs4
   buildpack: https://github.com/SpringerPE/cf-grafana-buildpack.git
   env:
     CLIENT_ID:  'blabla'
