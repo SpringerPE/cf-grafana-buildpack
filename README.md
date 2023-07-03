@@ -35,7 +35,7 @@ applications:
 - name: grafana
   memory: 512M
   instances: 1
-  stack: cflinuxfs3
+  stack: cflinuxfs4
   random-route: true
   buildpacks:
   - https://github.com/SpringerPE/cf-grafana-buildpack.git
