@@ -257,7 +257,7 @@ set_vcap_datasource_influxdb() {
   if [[ "${label}" = "csb-aws-influxdb" ]]; then
 
     local name=$(jq -r '.name' <<<"${datasource}")
-    local database=$(jq -r '.credentials.database' <<<"${datasource}")
+    local database=$(jq -r '.credentials.bound_database' <<<"${datasource}")
     local url=$(jq -r '.credentials.url' <<<"${datasource}")
     local user=$(jq -r '.credentials.username' <<<"${datasource}")
     local password=$(jq -r '.credentials.password' <<<"${datasource}")
