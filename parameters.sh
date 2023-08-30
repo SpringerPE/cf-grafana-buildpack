@@ -1,7 +1,7 @@
 # Variables, this file is designed to be sourced by supply
 
 # default versions
-GRAFANA_VERSION="${GRAFANA_VERSION:-9.3.1}"
+GRAFANA_VERSION="${GRAFANA_VERSION:-10.1.0}"
 CLOUDSQL_PROXY_VERSION="${CLOUDSQL_PROXY_VERSION:-1.32.0}"
 GRAFANA_ALERTMANAGER_VERSION="${GRAFANA_ALERTMANAGER_VERSION:-1.2.1}"
 
@@ -13,4 +13,4 @@ CLOUDSQL_PROXY_DOWNLOAD_URL="https://storage.googleapis.com/cloudsql-proxy/v${CL
 GRAFANA_DIR="${DEPS_DIR}/${DEPS_IDX}/grafana"
 SQLPROXY_DIR="${DEPS_DIR}/${DEPS_IDX}/cloud_sql_proxy"
 
-GRAFANA_MIN_VERSION="7.0.0"
+GRAFANA_MIN_VERSION="8.0.0"
