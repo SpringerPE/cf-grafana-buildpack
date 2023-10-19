@@ -173,7 +173,7 @@ set_env_DB() {
            		split("@")[1] | split(":")[1] | split("/")[0]' <<<"${db}") || DB_PORT='' 
    		fi
         uri="${uri}:${DB_PORT}"
-        DB_TLS="disable"
+        DB_TLS="require"
     fi
     if ! DB_NAME=$(jq -r -e '.credentials.database_name' <<<"${db}")
     then
@@ -242,10 +242,6 @@ set_sql_databases() {
     reset_env_DB
 
     db=$(get_db_vcap_service "${DB_BINDING_NAME}")
-
-    echo "ECHOING DATABASE"
-    echo $db
-    
     if [[ -n "${db}" ]]
     then
         set_env_DB "${db}" >/dev/null
