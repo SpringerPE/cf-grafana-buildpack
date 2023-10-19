@@ -208,26 +208,6 @@ set_env_DB() {
             [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="require"
         fi
     fi
-
- 	# SSL
-  	if jq -r -e '.credentials.sslcert' <<<"${db}" >/dev/null
-    then
-        if instance=$(jq -r -e '.credentials.instance_name' <<<"${db}")
-        then
-            DB_CERT_NAME="${instance}"
-            if project=$(jq -r -e '.credentials.ProjectId' <<<"${db}")
-            then
-                # Google GCP format
-                DB_CERT_NAME="${project}:${instance}"
-            fi
-            [[ "${DB_TYPE}" == "mysql" ]] && DB_TLS="true"
-            [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="verify-full"
-        else
-            DB_CERT_NAME=""
-            [[ "${DB_TYPE}" == "mysql" ]] && DB_TLS="skip-verify"
-            [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="require"
-        fi
-    fi
 	
     echo "${uri}"
 }
