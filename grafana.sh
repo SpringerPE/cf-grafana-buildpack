@@ -245,7 +245,7 @@ set_sql_databases() {
 	test=$(jq -r -e '.credentials' <<<"${db}")
 
     echo "ECHOING DATA?BASE"
-    ech0 $test
+    echo $test
     
     if [[ -n "${db}" ]]
     then
