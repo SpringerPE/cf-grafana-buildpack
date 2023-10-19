@@ -166,7 +166,12 @@ set_env_DB() {
         DB_TLS="false"
     elif [[ "${DB_TYPE}" == "postgres" ]]
     then
-        DB_PORT="5432"
+	if ! DB_PORT=$(jq -r -e '.credentials.Port' <<<"${db}")
+    	then
+		DB_NAME=$(jq -r -e '.credentials.uri |
+	    		split("://")[1] | split("/")[1] |
+	    		split("?")[0]' <<<"${db}") || DB_PORT=''
+    	fi
         uri="${uri}:${DB_PORT}"
         DB_TLS="disable"
     fi
