@@ -243,9 +243,6 @@ set_sql_databases() {
 
     db=$(get_db_vcap_service "${DB_BINDING_NAME}")
 	test=$(jq -r -e '.credentials' <<<"${db}")
-
-    echo "ECHOING DATA?BASE"
-    echo $test
     
     if [[ -n "${db}" ]]
     then
