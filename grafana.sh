@@ -166,9 +166,14 @@ set_env_DB() {
         DB_TLS="false"
     elif [[ "${DB_TYPE}" == "postgres" ]]
     then
-        DB_PORT="5432"
-        uri="${uri}:${DB_PORT}"
-        DB_TLS="disable"
+      if ! DB_PORT=$(jq -r -e '.credentials.port' <<<"${db}")
+      then
+          DB_PORT=$(jq -r -e '.credentials.uri |
+            split("://")[1] | split(":")[1] |
+            split("@")[1] | split(":")[1] | split("/")[0]' <<<"${db}") || DB_PORT='' 
+      fi
+      uri="${uri}:${DB_PORT}"
+      DB_TLS="disable"
     fi
     if ! DB_NAME=$(jq -r -e '.credentials.database_name' <<<"${db}")
     then
@@ -203,6 +208,31 @@ set_env_DB() {
             [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="require"
         fi
     fi
+
+    # SSL
+    if jq -r -e '.credentials.sslcert' <<<"${db}" >/dev/null
+    then
+      jq -r '.credentials.sslcert' <<<"${db}" > "${AUTH_ROOT}/${DB_NAME}-ca.crt"
+      jq -r '.credentials.sslrootcert' <<<"${db}" > "${AUTH_ROOT}/${DB_NAME}-client.crt"
+      DB_CA_CERT="${AUTH_ROOT}/${DB_NAME}-ca.crt"
+      DB_CLIENT_CERT="${AUTH_ROOT}/${DB_NAME}-client.crt"
+      if instance=$(jq -r -e '.credentials.instance_name' <<<"${db}")
+      then
+        DB_CERT_NAME="${instance}"
+        if project=$(jq -r -e '.credentials.ProjectId' <<<"${db}")
+        then
+            # Google GCP format
+            DB_CERT_NAME="${project}:${instance}"
+        fi
+        [[ "${DB_TYPE}" == "mysql" ]] && DB_TLS="true"
+        [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="verify-full"
+      else
+        DB_CERT_NAME=""
+        [[ "${DB_TYPE}" == "mysql" ]] && DB_TLS="skip-verify"
+        [[ "${DB_TYPE}" == "postgres" ]] && DB_TLS="require"
+      fi
+    fi
+
     echo "${uri}"
 }
 
