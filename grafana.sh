@@ -207,7 +207,7 @@ set_env_DB() {
     # SSL
     if jq -r -e '.credentials.sslcert' <<<"${db}" >/dev/null
     then
-		  jq -r '.credentials.sslcert' <<<"${db}" > "${AUTH_ROOT}/${DB_NAME}-ca.crt"
+      jq -r '.credentials.sslcert' <<<"${db}" > "${AUTH_ROOT}/${DB_NAME}-ca.crt"
       jq -r '.credentials.sslrootcert' <<<"${db}" > "${AUTH_ROOT}/${DB_NAME}-client.crt"
       DB_CA_CERT="${AUTH_ROOT}/${DB_NAME}-ca.crt"
       DB_CLIENT_CERT="${AUTH_ROOT}/${DB_NAME}-client.crt"
