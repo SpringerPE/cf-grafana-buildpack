@@ -304,13 +304,13 @@ set_vcap_datasource_postgres() {
           allowUiUpdates: false
           uid: my-postgres-db
           url: "${DB_HOST}:${DB_PORT}"
-          user: "${DB_USER}"
-          database: "${DB_NAME}"
+          user: ${DB_USER}
+          database: ${DB_NAME}
           jsonData:
             sslmode: require
           secureJsonData:
-            password: "${DB_PASS}"
-      EOF
+            password: ${DB_PASS}
+        EOF
 }
 
 set_vcap_datasource_prometheus() {
