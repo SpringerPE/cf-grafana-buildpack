@@ -293,24 +293,24 @@ set_vcap_datasource_postgres() {
 
     # Be careful, this is a HERE doc with tabs indentation!!
     cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}.yml"
-	  apiVersion: 1
-	
-    # list of datasources to insert/update depending
-    # what's available in the database
-    datasources:
-    - name: ${name}
-      type: postgres
-      editable: false
-      allowUiUpdates: false
-      uid: my-postgres-db
-      url: "${DB_HOST}:${DB_PORT}"
-      user: "${DB_USER}"
-      database: "${DB_NAME}"
-      jsonData:
-        sslmode: require
-      secureJsonData:
-        password: "${DB_PASS}"
-    EOF
+        apiVersion: 1
+        
+        # list of datasources to insert/update depending
+        # what's available in the database
+        datasources:
+        - name: ${name}
+          type: postgres
+          editable: false
+          allowUiUpdates: false
+          uid: my-postgres-db
+          url: "${DB_HOST}:${DB_PORT}"
+          user: "${DB_USER}"
+          database: "${DB_NAME}"
+          jsonData:
+            sslmode: require
+          secureJsonData:
+            password: "${DB_PASS}"
+      EOF
 }
 
 set_vcap_datasource_prometheus() {
