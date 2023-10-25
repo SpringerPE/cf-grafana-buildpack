@@ -271,9 +271,47 @@ set_sql_databases() {
     then
         set_env_DB "${db}" >/dev/null
         set_DB_proxy "${db}" >/dev/null
+        set_vcap_datasource_postgres
     fi
 }
 
+
+set_vcap_datasource_postgres() {
+    # local datasource="${1}"
+
+    # local label=$(jq -r '.label' <<<"${datasource}")
+    # local name=$(jq -r '.name' <<<"${datasource}")
+    # local user=$(jq -r '.credentials.prometheus.user | select (.!=null)' <<<"${datasource}")
+    # local pass=$(jq -r '.credentials.prometheus.password | select (.!=null)' <<<"${datasource}")
+    # local url=$(jq -r '.credentials.prometheus.url' <<<"${datasource}")
+    # local auth="true"
+
+    local name="postgres"
+
+    # [[ -z "${user}" ]] && auth="false"
+    mkdir -p "${APP_ROOT}/datasources"
+
+    # Be careful, this is a HERE doc with tabs indentation!!
+    cat <<-EOF > "${APP_ROOT}/datasources/${HOME_ORG_ID}-${name}.yml"
+	  apiVersion: 1
+	
+    # list of datasources to insert/update depending
+    # what's available in the database
+    datasources:
+    - name: ${name}
+      type: postgres
+      editable: false
+      allowUiUpdates: false
+      uid: my-postgres-db
+      url: "${DB_HOST}:${DB_PORT}"
+      user: "${DB_USER}"
+      database: "${DB_NAME}"
+      jsonData:
+        sslmode: require
+      secureJsonData:
+        password: "${DB_PASS}"
+    EOF
+}
 
 set_vcap_datasource_prometheus() {
     local datasource="${1}"
