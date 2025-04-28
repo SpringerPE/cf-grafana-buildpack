@@ -1,4 +1,4 @@
-FROM cloudfoundry/cflinuxfs3
+from cloudfoundry/cflinuxfs4
 copy . /home/buildpack/
 run  /home/buildpack/test/staging.sh
 volume /home/vcap/app
@@ -11,4 +11,4 @@ env INSTANCE_INDEX=0
 env TMPDIR=/home/vcap/tmp
 env HOME=/home/vcap/app
 
-CMD /home/buildpack/test/run.sh
+cmd /home/buildpack/test/run.sh

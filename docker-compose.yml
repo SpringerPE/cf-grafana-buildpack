@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   grafana:
     image: "grafana:latest"
@@ -10,8 +9,8 @@ services:
     environment:
       VCAP_APPLICATION: '{"uris":["grafana.example.com"]}'
       VCAP_SERVICES: ""
-      GRAFANA_VERSION: "10.3.3"
       PORT: 8080
+      DEBUG: 1
 
 
 
