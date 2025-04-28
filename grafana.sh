@@ -10,7 +10,6 @@ export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
 export SQLPROXY_ROOT=$SQLPROXY_ROOT
 export APP_ROOT="${ROOT}/app"
-export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
@@ -323,7 +322,7 @@ set_vcap_datasource_alertmanager() {
 	EOF
 
     echo "Installing camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION} ..."
-    grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}
+    grafana cli --homepath=${GRAFANA_ROOT} --pluginsDir "$GF_PATHS_PLUGINS" plugins install camptocamp-prometheus-alertmanager-datasource ${GRAFANA_ALERTMANAGER_VERSION}
 }
 
 set_datasources() {
@@ -340,8 +339,8 @@ set_datasources() {
         # Check if AlertManager for the Prometheus service instance has been enabled by the user first 
         # before installing the AlertManager Grafana plugin and configuring the AlertManager Grafana datasource
         alertmanager_prometheus_exists=$(jq -r '.credentials.alertmanager.url' <<<"${datasource}")
-	if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
-	then
+	    if [[ -n "${alertmanager_prometheus_exists}" ]] && [[ "${alertmanager_prometheus_exists}" != "null" ]]
+	    then
             set_vcap_datasource_alertmanager "${datasource}"
         fi
     fi
@@ -374,7 +373,7 @@ install_grafana_plugins() {
             if [[ -n "${pluginid}" ]]
             then
                 echo "Installing ${pluginid} ${pluginversion} ..."
-                grafana-cli --pluginsDir "$GF_PATHS_PLUGINS" plugins install ${pluginid} ${pluginversion}
+                grafana cli --homepath=${GRAFANA_ROOT} --pluginsDir "$GF_PATHS_PLUGINS" plugins install ${pluginid} ${pluginversion}
             fi
         done <<<$(grep -v '^#' "${GRAFANA_CFG_PLUGINS}")
     fi
@@ -402,12 +401,7 @@ run_sql_proxies() {
 run_grafana_server() {
     echo "Launching grafana server ..."
     pushd "${GRAFANA_ROOT}" >/dev/null
-        if [[ -f "${GRAFANA_CFG_INI}" ]]
-        then
-            launch grafana-server -config=${GRAFANA_CFG_INI}
-        else
-            launch grafana-server
-        fi
+        launch grafana server --homepath=${GRAFANA_ROOT}
     popd
 }
 
