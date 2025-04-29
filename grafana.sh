@@ -5,6 +5,7 @@ set -euo pipefail
 # See bin/finalize to check predefined vars
 ROOT="/home/vcap"
 export AUTH_ROOT="${ROOT}/auth"
+export GRAFANA_CFG_INI="${ROOT}/app/grafana.ini"
 #export GRAFANA_ROOT=$(find ${ROOT}/deps -name grafana -type d -maxdepth 2)
 export GRAFANA_ROOT=$GRAFANA_ROOT
 #export SQLPROXY_ROOT=$(find ${ROOT}/deps -name cloud_sql_proxy -type d -maxdepth 2)
@@ -13,6 +14,9 @@ export APP_ROOT="${ROOT}/app"
 export GRAFANA_CFG_PLUGINS="${ROOT}/app/plugins.txt"
 export GRAFANA_POST_START="${ROOT}/app/post-start.sh"
 export PATH=${PATH}:${GRAFANA_ROOT}/bin:${SQLPROXY_ROOT}
+
+export GF_PATHS_CONFIG="${ROOT}/app/grafana.ini"
+
 
 ### Bindings
 # Prometheus datasource
@@ -401,7 +405,12 @@ run_sql_proxies() {
 run_grafana_server() {
     echo "Launching grafana server ..."
     pushd "${GRAFANA_ROOT}" >/dev/null
-        launch grafana server --homepath=${GRAFANA_ROOT}
+        if [[ -f "${GRAFANA_CFG_INI}" ]]
+        then
+            launch grafana server --config=${GRAFANA_CFG_INI} --homepath=${GRAFANA_ROOT}
+        else
+            launch grafana server --homepath=${GRAFANA_ROOT}
+        fi
     popd
 }
 
