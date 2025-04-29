@@ -37,7 +37,7 @@ export SQLPROXY_ROOT="/home/vcap/deps/${DEPS_IDX}/cloud_sql_proxy"
 
 # Avoid overriding these vars by end user vars
 export GF_PATHS_CONFIG="/home/vcap/app/grafana.ini"
-export GF_PATHS_HOME=${GRAFANA_ROOT}
+export GF_PATHS_HOME="/home/vcap/deps/${DEPS_IDX}/grafana"
 export GF_PATHS_PLUGINS="/home/vcap/app/plugins"
 export GF_PATHS_PROVISIONING="/home/vcap/app"
 export GF_PATHS_LOGS="/home/vcap/logs"
